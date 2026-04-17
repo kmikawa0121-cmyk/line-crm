@@ -26,8 +26,8 @@ app.post('/webhook/smaregi', express.json(), handleSmaregiWebhook);
 app.get('/', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
 // --- 起動 ---
-app.listen(PORT, () => {
-  console.log(`サーバー起動: http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`サーバー起動: PORT=${PORT}`);
   initLineClient();
   startScheduler();
 });
