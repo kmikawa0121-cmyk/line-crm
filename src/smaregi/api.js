@@ -44,7 +44,7 @@ async function findCustomerByMemberCode(memberCode) {
     `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/customers`,
     {
       headers: { Authorization: `Bearer ${token}` },
-      params: { customerCode: memberCode, limit: 1 },
+      params: { customer_code: memberCode, limit: 1 },
     }
   );
 
