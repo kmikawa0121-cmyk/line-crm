@@ -49,13 +49,16 @@ async function handleEvent(event) {
       const text = event.message.text.trim();
       const member = db.findMemberByLineId(lineUserId);
 
-      // 未連携の場合 → 会員番号として処理
+      // 未連携 かつ 数字のみのメッセージ → 会員番号として処理
+      // 相談など文字を含むメッセージはスタッフが手動対応できるよう無視する
       if (!member || !member.smaregi_customer_id) {
-        await handleMemberCodeInput(lineUserId, text);
+        if (/^\d+$/.test(text)) {
+          await handleMemberCodeInput(lineUserId, text);
+        }
         return;
       }
 
-      // 連携済みの場合は何もしない（または将来的に問い合わせ対応）
+      // 連携済みの場合は何もしない（スタッフが手動対応）
     }
   } catch (err) {
     console.error('[LINE Handler Error]', err.message);
