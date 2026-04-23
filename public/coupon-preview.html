@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #e8e8e8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+  .bubble {
+    width: 320px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  }
+  /* ヘッダー */
+  .header {
+    background: #2c2c2c;
+    padding: 24px;
+  }
+  .header .label {
+    color: #c8960c;
+    font-size: 12px;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  .header .discount {
+    color: #f2ede6;
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: -1px;
+  }
+  .header .sub {
+    color: rgba(242,237,230,0.35);
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-top: 6px;
+  }
+  /* ボディ */
+  .body {
+    background: #f2ede6;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .row .key {
+    font-size: 11px;
+    color: #999;
+    width: 56px;
+    flex-shrink: 0;
+  }
+  .row .val {
+    font-size: 12px;
+    color: #2c2c2c;
+    font-weight: 500;
+  }
+  .divider {
+    height: 1px;
+    background: #e0d9d0;
+    margin: 4px 0;
+  }
+  .note {
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.6;
+  }
+  /* フッター */
+  .footer {
+    background: #2c2c2c;
+    padding: 14px;
+    text-align: center;
+    color: #c8960c;
+    font-size: 13px;
+    letter-spacing: 4px;
+    font-family: 'Noto Serif JP', serif;
+  }
+</style>
+</head>
+<body>
+  <div class="bubble">
+    <div class="header">
+      <div class="label">お誕生日特典</div>
+      <div class="discount">5% OFF</div>
+      <div class="sub">BIRTHDAY COUPON</div>
+    </div>
+    <div class="body">
+      <div class="row">
+        <span class="key">対象</span>
+        <span class="val">全商品</span>
+      </div>
+      <div class="row">
+        <span class="key">有効期限</span>
+        <span class="val" id="expiry"></span>
+      </div>
+      <div class="divider"></div>
+      <div class="note">ご来店時にこの画面を<br>スタッフにご提示ください</div>
+    </div>
+    <div class="footer">美川漢方堂</div>
+  </div>
+  <script>
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    document.getElementById('expiry').textContent =
+      `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日まで`;
+  </script>
+</body>
+</html>
