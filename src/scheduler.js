@@ -67,9 +67,8 @@ function startScheduler() {
           (Date.now() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
         );
 
-        // 30日・60日・90日のいずれかに該当するか判定
+        // 60日・90日に該当するか判定（30日はフォローDMと重複のため除外）
         const thresholds = [
-          { days: 30, type: '30day' },
           { days: 60, type: '60day' },
           { days: 90, type: '90day' },
         ];
