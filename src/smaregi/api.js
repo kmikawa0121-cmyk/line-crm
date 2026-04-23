@@ -82,7 +82,7 @@ async function getPurchaseHistory(customerId) {
       params: {
         customer_id: customerId,
         sort: 'transaction_date_time:desc',
-        limit: 10,
+        limit: 1000,
       },
     }
   );
