@@ -1,8 +1,8 @@
 const cron = require('node-cron');
 const db = require('./db');
 const { getClient } = require('./line/handler');
-const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage } = require('./line/messages');
-const { getPurchaseHistory } = require('./smaregi/api');
+const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage, getBirthdayMessage } = require('./line/messages');
+const { getPurchaseHistory, getCustomerById } = require('./smaregi/api');
 
 /**
  * 毎時0分に未送信のスケジュールメッセージを確認して送信
@@ -155,6 +155,48 @@ function startScheduler() {
   });
 
   console.log('[Scheduler] 長期未来店リマインド起動（毎日11:00に実行）');
+
+  // 毎日朝9時に誕生日チェック
+  cron.schedule('0 9 * * *', async () => {
+    console.log('[Birthday] 誕生日チェック開始...');
+    const members = db.getAllLinkedMembers();
+    const today = new Date();
+    const todayMD = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const thisYear = today.getFullYear();
+
+    for (const member of members) {
+      try {
+        const customer = await getCustomerById(member.smaregi_customer_id);
+        if (!customer?.birthday) continue;
+
+        // スマレジの誕生日フォーマット: YYYY-MM-DD or MM-DD
+        const birthday = customer.birthday.slice(-5); // MM-DD を取り出す
+
+        if (birthday !== todayMD) continue;
+        if (db.hasBirthdayMessage(member.id, thisYear)) continue;
+
+        let displayName = member.display_name;
+        try {
+          const profile = await getClient().getProfile(member.line_user_id);
+          displayName = profile.displayName;
+        } catch (_) {}
+
+        await getClient().pushMessage({
+          to: member.line_user_id,
+          messages: [getBirthdayMessage(displayName)],
+        });
+
+        db.saveBirthdayMessage(member.id, thisYear);
+        console.log(`[Birthday] 送信完了: ${member.line_user_id}`);
+      } catch (err) {
+        console.error(`[Birthday] エラー: member_id=${member.id}`, err.message);
+      }
+    }
+
+    console.log('[Birthday] 誕生日チェック完了');
+  });
+
+  console.log('[Scheduler] 誕生日メッセージ起動（毎日9:00に実行）');
 }
 
 module.exports = { startScheduler };

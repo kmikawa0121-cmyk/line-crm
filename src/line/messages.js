@@ -102,10 +102,23 @@ function getLongAbsenceMessage(reminderType, displayName) {
   };
 }
 
+/**
+ * 誕生日メッセージ
+ * @param {string} displayName
+ */
+function getBirthdayMessage(displayName) {
+  const name = displayName || 'お客様';
+  return {
+    type: 'text',
+    text: `${name}様、お誕生日おめでとうございます🎂\n\n美川漢方堂スタッフ一同より、心よりお祝い申し上げます。\n\nお誕生日という特別な節目に、改めてご自身の体と向き合っていただけると嬉しいです。\n\n健康は、毎日の小さな積み重ねから生まれます。これからも${name}様の健やかな毎日を、美川漢方堂はそばで支えてまいります🌿\n\n素敵な一日をお過ごしください✨`,
+  };
+}
+
 module.exports = {
   getFollowUpMessage,
   getReorderReminderMessage,
   getLongAbsenceMessage,
+  getBirthdayMessage,
   getWelcomeMessage,
   getLinkSuccessMessage,
   getLinkFailMessage,

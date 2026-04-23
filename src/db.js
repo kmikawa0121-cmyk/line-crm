@@ -34,6 +34,15 @@ db.exec(`
     FOREIGN KEY (purchase_id) REFERENCES purchases(id)
   );
 
+  CREATE TABLE IF NOT EXISTS birthday_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL,
+    year INTEGER NOT NULL,
+    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(member_id, year),
+    FOREIGN KEY (member_id) REFERENCES members(id)
+  );
+
   CREATE TABLE IF NOT EXISTS reorder_reminders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     member_id INTEGER NOT NULL,
@@ -106,6 +115,21 @@ function markMessageFailed(id) {
 
 // --- reorder_reminders ---
 
+// --- birthday_messages ---
+
+function hasBirthdayMessage(memberId, year) {
+  const row = db.prepare(
+    'SELECT id FROM birthday_messages WHERE member_id = ? AND year = ?'
+  ).get(memberId, year);
+  return !!row;
+}
+
+function saveBirthdayMessage(memberId, year) {
+  return db.prepare(
+    'INSERT OR IGNORE INTO birthday_messages (member_id, year) VALUES (?, ?)'
+  ).run(memberId, year);
+}
+
 function getAllLinkedMembers() {
   return db.prepare(
     'SELECT * FROM members WHERE smaregi_customer_id IS NOT NULL'
@@ -138,4 +162,6 @@ module.exports = {
   getAllLinkedMembers,
   hasReorderReminder,
   saveReorderReminder,
+  hasBirthdayMessage,
+  saveBirthdayMessage,
 };
