@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const db = require('./db');
 const { getClient } = require('./line/handler');
-const { getFollowUpMessage, getReorderReminderMessage } = require('./line/messages');
+const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage } = require('./line/messages');
 const { getPurchaseHistory } = require('./smaregi/api');
 
 /**
@@ -105,6 +105,57 @@ function startScheduler() {
   });
 
   console.log('[Scheduler] 補充リマインド起動（毎日10:00に実行）');
+
+  // 毎日朝11時に長期未来店チェック
+  cron.schedule('0 11 * * *', async () => {
+    console.log('[Absence] 長期未来店チェック開始...');
+    const members = db.getAllLinkedMembers();
+
+    for (const member of members) {
+      try {
+        const transactions = await getPurchaseHistory(member.smaregi_customer_id);
+        if (!transactions || transactions.length === 0) continue;
+
+        const lastDate = transactions[0].transactionDateTime?.slice(0, 10);
+        if (!lastDate) continue;
+
+        const daysSince = Math.floor(
+          (Date.now() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        const thresholds = [
+          { days: 180, type: '6month' },
+          { days: 365, type: '1year' },
+        ];
+
+        for (const { days, type } of thresholds) {
+          if (daysSince >= days && daysSince < days + 3) {
+            if (db.hasReorderReminder(member.id, type, lastDate)) continue;
+
+            let displayName = member.display_name;
+            try {
+              const profile = await getClient().getProfile(member.line_user_id);
+              displayName = profile.displayName;
+            } catch (_) {}
+
+            await getClient().pushMessage({
+              to: member.line_user_id,
+              messages: [getLongAbsenceMessage(type, displayName)],
+            });
+
+            db.saveReorderReminder(member.id, type, lastDate);
+            console.log(`[Absence] 送信完了: ${member.line_user_id} type=${type}`);
+          }
+        }
+      } catch (err) {
+        console.error(`[Absence] エラー: member_id=${member.id}`, err.message);
+      }
+    }
+
+    console.log('[Absence] 長期未来店チェック完了');
+  });
+
+  console.log('[Scheduler] 長期未来店リマインド起動（毎日11:00に実行）');
 }
 
 module.exports = { startScheduler };

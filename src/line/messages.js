@@ -77,9 +77,35 @@ function getReorderReminderMessage(reminderType, displayName) {
   };
 }
 
+/**
+ * 長期未来店リマインドメッセージ
+ * @param {'6month'|'1year'} reminderType
+ * @param {string} displayName
+ */
+function getLongAbsenceMessage(reminderType, displayName) {
+  const name = displayName || 'お客様';
+
+  const templates = {
+    '6month': {
+      type: 'text',
+      text: `${name}様、美川漢方堂です。\n\nお元気にお過ごしでしょうか？\n最後にご来店いただいてから、半年が経ちました。\n\nその後、お体の調子はいかがですか？\n季節の変わり目は、体が思いがけないサインを出すことがあります。\n\n「なんとなく調子が悪い」「最近疲れやすい」など、小さなことでも構いません。どうぞ気軽にご相談ください。\n\n${name}様のお顔を見られる日を、スタッフ一同楽しみにしております🌿`,
+    },
+    '1year': {
+      type: 'text',
+      text: `${name}様、美川漢方堂です。\n\nご無沙汰しております。お変わりなくお過ごしでしょうか？\n\n最後のご来店から、1年が経ちました。\n\n1年という時間の中で、お体にはさまざまな変化があったことと思います。\n\n年齢とともに、体が必要とするものも変わっていきます。今のお体の状態に合わせた漢方・健康食品を、改めてご提案させていただけたら嬉しいです。\n\nいつでもお待ちしております。久しぶりに、お顔を見せにいらしてください🌱`,
+    },
+  };
+
+  return templates[reminderType] || {
+    type: 'text',
+    text: `${name}様、お久しぶりです。美川漢方堂です。お体の調子はいかがでしょうか？またお気軽にご相談ください🌿`,
+  };
+}
+
 module.exports = {
   getFollowUpMessage,
   getReorderReminderMessage,
+  getLongAbsenceMessage,
   getWelcomeMessage,
   getLinkSuccessMessage,
   getLinkFailMessage,
