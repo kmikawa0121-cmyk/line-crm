@@ -48,8 +48,38 @@ function getLinkFailMessage() {
   };
 }
 
+/**
+ * 補充リマインドメッセージ
+ * @param {'30day'|'60day'|'90day'} reminderType
+ * @param {string} displayName
+ */
+function getReorderReminderMessage(reminderType, displayName) {
+  const name = displayName || 'お客様';
+
+  const templates = {
+    '30day': {
+      type: 'text',
+      text: `${name}様、こんにちは。美川漢方堂です🌿\n\nご購入から1ヶ月が経ちました。\n商品はそろそろ残り少なくなってきた頃ではないでしょうか？\n\n漢方・健康食品は途切れずに続けることが大切です。補充のタイミングでお声がけいただければ、スムーズにご用意できます。\n\nご来店・ご注文はお気軽にどうぞ😊`,
+    },
+    '60day': {
+      type: 'text',
+      text: `${name}様、お久しぶりです。美川漢方堂です🌿\n\n最後のご購入から2ヶ月が経ちました。\nお体の調子はいかがでしょうか？\n\n商品が切れてしまうと、これまでの積み重ねがリセットされてしまいます。\nもし飲み切ってしまっていたら、ぜひ早めにご相談ください。\n\nいつでもお待ちしております🙏`,
+    },
+    '90day': {
+      type: 'text',
+      text: `${name}様、美川漢方堂です。\n\nお久しぶりですね。最後のご購入から3ヶ月が経ちました。\n\nその後、お体の具合はいかがですか？\n\n漢方・健康食品は、続けることで本来の力を発揮します。もし何かご不安やお悩みがあれば、どんな小さなことでもご相談ください。\n\n${name}様のご来店を心よりお待ちしております🌱`,
+    },
+  };
+
+  return templates[reminderType] || {
+    type: 'text',
+    text: `${name}様、お体の調子はいかがでしょうか？美川漢方堂より近況のご確認でご連絡しました。いつでもご相談ください🌿`,
+  };
+}
+
 module.exports = {
   getFollowUpMessage,
+  getReorderReminderMessage,
   getWelcomeMessage,
   getLinkSuccessMessage,
   getLinkFailMessage,

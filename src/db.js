@@ -33,6 +33,15 @@ db.exec(`
     FOREIGN KEY (member_id) REFERENCES members(id),
     FOREIGN KEY (purchase_id) REFERENCES purchases(id)
   );
+
+  CREATE TABLE IF NOT EXISTS reorder_reminders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL,
+    reminder_type TEXT NOT NULL,        -- '30day' | '60day' | '90day'
+    last_purchase_date TEXT NOT NULL,   -- リマインド時点の最終購入日
+    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (member_id) REFERENCES members(id)
+  );
 `);
 
 // --- members ---
@@ -95,6 +104,27 @@ function markMessageFailed(id) {
   ).run(id);
 }
 
+// --- reorder_reminders ---
+
+function getAllLinkedMembers() {
+  return db.prepare(
+    'SELECT * FROM members WHERE smaregi_customer_id IS NOT NULL'
+  ).all();
+}
+
+function hasReorderReminder(memberId, reminderType, lastPurchaseDate) {
+  const row = db.prepare(
+    'SELECT id FROM reorder_reminders WHERE member_id = ? AND reminder_type = ? AND last_purchase_date = ?'
+  ).get(memberId, reminderType, lastPurchaseDate);
+  return !!row;
+}
+
+function saveReorderReminder(memberId, reminderType, lastPurchaseDate) {
+  return db.prepare(
+    'INSERT INTO reorder_reminders (member_id, reminder_type, last_purchase_date) VALUES (?, ?, ?)'
+  ).run(memberId, reminderType, lastPurchaseDate);
+}
+
 module.exports = {
   findMemberByLineId,
   findMemberBySmaregiId,
@@ -105,4 +135,7 @@ module.exports = {
   getPendingMessages,
   markMessageSent,
   markMessageFailed,
+  getAllLinkedMembers,
+  hasReorderReminder,
+  saveReorderReminder,
 };

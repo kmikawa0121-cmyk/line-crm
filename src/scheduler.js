@@ -1,7 +1,8 @@
 const cron = require('node-cron');
 const db = require('./db');
 const { getClient } = require('./line/handler');
-const { getFollowUpMessage } = require('./line/messages');
+const { getFollowUpMessage, getReorderReminderMessage } = require('./line/messages');
+const { getPurchaseHistory } = require('./smaregi/api');
 
 /**
  * 毎時0分に未送信のスケジュールメッセージを確認して送信
@@ -46,6 +47,64 @@ function startScheduler() {
   });
 
   console.log('[Scheduler] スケジューラー起動（毎時0分に実行）');
+
+  // 毎日朝10時に補充リマインドチェック
+  cron.schedule('0 10 * * *', async () => {
+    console.log('[Reorder] 補充リマインドチェック開始...');
+    const members = db.getAllLinkedMembers();
+
+    for (const member of members) {
+      try {
+        const transactions = await getPurchaseHistory(member.smaregi_customer_id);
+        if (!transactions || transactions.length === 0) continue;
+
+        // 最終購入日を取得
+        const lastTx = transactions[0];
+        const lastDate = lastTx.transactionDateTime?.slice(0, 10);
+        if (!lastDate) continue;
+
+        const daysSince = Math.floor(
+          (Date.now() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        // 30日・60日・90日のいずれかに該当するか判定
+        const thresholds = [
+          { days: 30, type: '30day' },
+          { days: 60, type: '60day' },
+          { days: 90, type: '90day' },
+        ];
+
+        for (const { days, type } of thresholds) {
+          if (daysSince >= days && daysSince < days + 3) {
+            // すでに送信済みか確認
+            if (db.hasReorderReminder(member.id, type, lastDate)) continue;
+
+            // LINEの表示名を取得
+            let displayName = member.display_name;
+            try {
+              const profile = await getClient().getProfile(member.line_user_id);
+              displayName = profile.displayName;
+            } catch (_) {}
+
+            // リマインド送信
+            await getClient().pushMessage({
+              to: member.line_user_id,
+              messages: [getReorderReminderMessage(type, displayName)],
+            });
+
+            db.saveReorderReminder(member.id, type, lastDate);
+            console.log(`[Reorder] 送信完了: ${member.line_user_id} type=${type} lastDate=${lastDate}`);
+          }
+        }
+      } catch (err) {
+        console.error(`[Reorder] エラー: member_id=${member.id}`, err.message);
+      }
+    }
+
+    console.log('[Reorder] 補充リマインドチェック完了');
+  });
+
+  console.log('[Scheduler] 補充リマインド起動（毎日10:00に実行）');
 }
 
 module.exports = { startScheduler };
