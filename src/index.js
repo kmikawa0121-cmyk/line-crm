@@ -36,6 +36,9 @@ app.get('/liff', (req, res) => {
   res.send(html);
 });
 
+// 静的ファイル配信（public ディレクトリ）
+app.use(express.static(path.join(__dirname, '../public')));
+
 // ヘルスチェック
 app.get('/', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 

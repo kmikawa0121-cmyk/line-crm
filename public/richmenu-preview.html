@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 2500px;
+    height: 843px;
+    background: #f7f7f0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+  .btn {
+    background: white;
+    border: 2.5px solid #4ab04a;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+  }
+  .btn svg {
+    width: 140px;
+    height: 140px;
+  }
+  .btn span {
+    font-size: 52px;
+    color: #333;
+    font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+
+<!-- マイページ（新） -->
+<div class="btn">
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="32" r="20" stroke="#4ab04a" stroke-width="6"/>
+    <path d="M10 88c0-22 18-36 40-36s40 14 40 36" stroke="#4ab04a" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="50" cy="32" r="10" fill="#4ab04a" opacity="0.15"/>
+  </svg>
+  <span>マイページ</span>
+</div>
+
+<!-- オススメ商品 -->
+<div class="btn">
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="30" width="80" height="60" rx="4" stroke="#4ab04a" stroke-width="6"/>
+    <path d="M15 30V20a5 5 0 015-5h60a5 5 0 015 5v10" stroke="#4ab04a" stroke-width="6"/>
+    <line x1="10" y1="50" x2="90" y2="50" stroke="#4ab04a" stroke-width="5"/>
+    <rect x="38" y="8" width="8" height="20" rx="4" fill="#4ab04a"/>
+    <rect x="54" y="8" width="8" height="20" rx="4" fill="#4ab04a"/>
+    <line x1="30" y1="65" x2="70" y2="65" stroke="#4ab04a" stroke-width="5" stroke-linecap="round"/>
+    <line x1="30" y1="76" x2="60" y2="76" stroke="#4ab04a" stroke-width="5" stroke-linecap="round"/>
+  </svg>
+  <span>オススメ商品</span>
+</div>
+
+<!-- お問い合わせ -->
+<div class="btn">
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="8" y="18" width="84" height="64" rx="6" stroke="#4ab04a" stroke-width="6"/>
+    <polyline points="8,18 50,58 92,18" stroke="#4ab04a" stroke-width="6" stroke-linejoin="round"/>
+  </svg>
+  <span>お問い合わせ</span>
+</div>
+
+<!-- ホームページ -->
+<div class="btn">
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polyline points="10,52 50,14 90,52" stroke="#4ab04a" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="22" y="50" width="56" height="38" rx="3" stroke="#4ab04a" stroke-width="6"/>
+    <rect x="38" y="66" width="24" height="22" rx="2" stroke="#4ab04a" stroke-width="5"/>
+  </svg>
+  <span>ホームページ</span>
+</div>
+
+<!-- 公式SNS -->
+<div class="btn">
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="18" y="12" width="50" height="76" rx="8" stroke="#4ab04a" stroke-width="6"/>
+    <line x1="18" y1="28" x2="68" y2="28" stroke="#4ab04a" stroke-width="5"/>
+    <line x1="18" y1="72" x2="68" y2="72" stroke="#4ab04a" stroke-width="5"/>
+    <circle cx="43" cy="82" r="4" fill="#4ab04a"/>
+    <path d="M58 44 C58 38 70 34 76 40 C82 46 78 58 70 58 C66 58 63 56 61 53 L55 62 L52 54 L60 51 C58 49 58 47 58 44Z" stroke="#4ab04a" stroke-width="5" fill="none" stroke-linejoin="round"/>
+    <path d="M43 50 C43 44 47 40 50 38" stroke="#4ab04a" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+  <span>公式SNS</span>
+</div>
+
+<!-- 交通アクセス -->
+<div class="btn">
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 10C35 10 22 23 22 38C22 58 50 90 50 90C50 90 78 58 78 38C78 23 65 10 50 10Z" stroke="#4ab04a" stroke-width="6"/>
+    <circle cx="50" cy="38" r="12" stroke="#4ab04a" stroke-width="6"/>
+  </svg>
+  <span>交通アクセス</span>
+</div>
+
+</body>
+</html>
