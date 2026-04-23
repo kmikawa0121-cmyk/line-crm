@@ -5,95 +5,178 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>美川漢方堂 マイページ</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
-      background: #f5f5f0;
-      color: #333;
+      font-family: 'Noto Sans JP', 'Hiragino Sans', sans-serif;
+      background: #f2ede6;
+      color: #2c2c2c;
       min-height: 100vh;
     }
 
+    /* ヘッダー */
     header {
-      background: #3d6b4f;
-      color: white;
-      padding: 20px 16px 16px;
+      background: #2c2c2c;
+      color: #f2ede6;
+      padding: 24px 16px 20px;
       text-align: center;
+      position: relative;
+    }
+    header::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 1px;
+      background: #c8960c;
+      margin: 12px auto 0;
     }
     header h1 {
-      font-size: 18px;
-      font-weight: bold;
-      letter-spacing: 0.05em;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 20px;
+      font-weight: 400;
+      letter-spacing: 0.2em;
     }
     header p {
-      font-size: 13px;
-      margin-top: 4px;
-      opacity: 0.85;
+      font-size: 11px;
+      margin-top: 6px;
+      letter-spacing: 0.15em;
+      opacity: 0.65;
     }
 
+    /* ローディング・エラー */
     #loading {
       text-align: center;
-      padding: 60px 20px;
-      color: #888;
-      font-size: 14px;
+      padding: 80px 20px;
+      color: #999;
+      font-size: 13px;
+      letter-spacing: 0.05em;
     }
-
     #error-msg {
       text-align: center;
       padding: 60px 20px;
-      color: #c0392b;
-      font-size: 14px;
+      color: #8b4040;
+      font-size: 13px;
+      line-height: 1.8;
       display: none;
     }
 
-    #main { display: none; padding: 16px; }
+    #main { display: none; padding: 20px 16px; }
 
-    /* ポイントカード */
-    .point-card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px 20px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    /* 会員証カード */
+    .member-card {
+      background: #2c2c2c;
+      border-radius: 16px;
+      padding: 28px 24px 24px;
       margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
     }
-    .point-card .label {
-      font-size: 13px;
-      color: #888;
-      margin-bottom: 8px;
+    .member-card::before {
+      content: '';
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 120px;
+      height: 120px;
+      border: 1px solid rgba(200,150,12,0.2);
+      border-radius: 50%;
     }
-    .point-card .point-value {
-      font-size: 42px;
-      font-weight: bold;
-      color: #3d6b4f;
+    .member-card::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 80px;
+      height: 80px;
+      border: 1px solid rgba(200,150,12,0.15);
+      border-radius: 50%;
+    }
+    .member-card .card-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: #c8960c;
+      margin-bottom: 6px;
+    }
+    .member-card .card-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: #f2ede6;
+      margin-bottom: 20px;
+      letter-spacing: 0.05em;
+    }
+    .member-card .point-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .member-card .point-num {
+      font-size: 38px;
+      font-weight: 300;
+      color: #f2ede6;
       line-height: 1;
+      letter-spacing: -0.02em;
     }
-    .point-card .point-unit {
-      font-size: 16px;
-      color: #3d6b4f;
-      margin-left: 4px;
+    .member-card .point-unit {
+      font-size: 13px;
+      color: #c8960c;
+      letter-spacing: 0.1em;
     }
-    .point-card .user-name {
-      font-size: 14px;
-      color: #555;
-      margin-top: 10px;
+    .member-card .point-label {
+      font-size: 10px;
+      color: rgba(242,237,230,0.5);
+      margin-top: 4px;
+      letter-spacing: 0.1em;
+    }
+    .member-card .gold-line {
+      height: 1px;
+      background: linear-gradient(to right, #c8960c, transparent);
+      margin: 16px 0;
+      opacity: 0.5;
+    }
+
+    /* バーコード */
+    .barcode-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px 16px 16px;
+      margin-bottom: 16px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .barcode-card .section-title {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: #999;
+      margin-bottom: 14px;
+    }
+    #barcode-svg {
+      max-width: 100%;
+    }
+    .barcode-card .barcode-note {
+      font-size: 10px;
+      color: #bbb;
+      margin-top: 8px;
+      letter-spacing: 0.05em;
     }
 
     /* セクション */
     .section {
       background: white;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border-radius: 16px;
+      padding: 20px 16px;
       margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
     .section-title {
-      font-size: 14px;
-      font-weight: bold;
-      color: #3d6b4f;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e8ede9;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: #999;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f0ebe3;
     }
 
     /* 購入履歴 */
@@ -102,115 +185,110 @@
       justify-content: space-between;
       align-items: center;
       padding: 10px 0;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 14px;
+      border-bottom: 1px solid #f5f1eb;
+      font-size: 13px;
     }
     .history-item:last-child { border-bottom: none; }
-    .history-date { color: #888; font-size: 13px; }
-    .history-total { font-weight: bold; color: #333; }
-
+    .history-date { color: #aaa; font-size: 12px; letter-spacing: 0.03em; }
+    .history-total { font-weight: 500; color: #2c2c2c; }
     .no-history {
       text-align: center;
-      color: #aaa;
-      font-size: 13px;
+      color: #bbb;
+      font-size: 12px;
       padding: 16px 0;
+      letter-spacing: 0.05em;
     }
 
-    /* バーコード */
-    .barcode-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px 16px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      margin-bottom: 16px;
-    }
-    .barcode-card .label {
-      font-size: 13px;
-      color: #888;
-      margin-bottom: 12px;
-    }
-    .barcode-card .barcode-note {
-      font-size: 11px;
-      color: #aaa;
-      margin-top: 8px;
-    }
-    #barcode-svg {
-      max-width: 100%;
-    }
-
-    /* ボタン */
+    /* オンラインショップボタン */
     .btn-shop {
       display: block;
       width: 100%;
       padding: 16px;
-      background: #3d6b4f;
-      color: white;
+      background: transparent;
+      color: #2c2c2c;
       text-align: center;
       border-radius: 12px;
       text-decoration: none;
-      font-size: 15px;
-      font-weight: bold;
-      box-shadow: 0 2px 8px rgba(61,107,79,0.3);
-      margin-bottom: 16px;
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      border: 1px solid #2c2c2c;
+      margin-bottom: 32px;
+      transition: all 0.2s;
     }
-    .btn-shop:active { opacity: 0.85; }
+    .btn-shop:active {
+      background: #2c2c2c;
+      color: #f2ede6;
+    }
+
+    /* フッター */
+    .footer {
+      text-align: center;
+      padding: 0 0 24px;
+      font-size: 10px;
+      color: #ccc;
+      letter-spacing: 0.1em;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>美川漢方堂</h1>
-  <p>マイページ</p>
+  <p>MY PAGE</p>
 </header>
 
 <div id="loading">読み込み中...</div>
 <div id="error-msg">会員情報が見つかりませんでした。<br>LINEトーク画面から会員番号をご入力ください。</div>
 
 <div id="main">
-  <div class="point-card">
-    <div class="label">現在のポイント</div>
-    <div>
-      <span class="point-value" id="point-value">0</span>
+
+  <!-- 会員証カード -->
+  <div class="member-card">
+    <div class="card-label">MEMBER</div>
+    <div class="card-name" id="user-name"></div>
+    <div class="gold-line"></div>
+    <div class="point-label">POINT BALANCE</div>
+    <div class="point-row">
+      <span class="point-num" id="point-value">0</span>
       <span class="point-unit">pt</span>
     </div>
-    <div class="user-name" id="user-name"></div>
   </div>
 
+  <!-- バーコード -->
   <div class="barcode-card">
-    <div class="label">会員バーコード</div>
+    <div class="section-title">MEMBER BARCODE</div>
     <svg id="barcode-svg"></svg>
     <div class="barcode-note">レジでスキャンしてください</div>
   </div>
 
+  <!-- 購入履歴 -->
   <div class="section">
-    <div class="section-title">購入履歴</div>
+    <div class="section-title">PURCHASE HISTORY</div>
     <div id="history-list"><div class="no-history">履歴を読み込み中...</div></div>
   </div>
 
+  <!-- オンラインショップ -->
   <a href="https://cocopery.com/mypage/login" class="btn-shop" target="_blank">
-    オンラインショップへ →
+    オンラインショップへ
   </a>
+
+  <div class="footer">MIKAWA KAMPODO</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
-  const LIFF_ID = '__LIFF_ID__'; // Railway環境変数 LIFF_ID から自動置換
+  const LIFF_ID = '__LIFF_ID__';
 
   async function init() {
     try {
       await liff.init({ liffId: LIFF_ID });
-
-      if (!liff.isLoggedIn()) {
-        liff.login();
-        return;
-      }
+      if (!liff.isLoggedIn()) { liff.login(); return; }
 
       const profile = await liff.getProfile();
       const lineUserId = profile.userId;
 
-      // ポイント取得
       const memberRes = await fetch(`/api/liff/member?lineUserId=${lineUserId}`);
       if (!memberRes.ok) {
         document.getElementById('loading').style.display = 'none';
@@ -218,22 +296,23 @@
         return;
       }
       const member = await memberRes.json();
+
       document.getElementById('point-value').textContent = member.point.toLocaleString();
       document.getElementById('user-name').textContent = member.displayName + ' 様';
 
-      // バーコード生成（Code 128）
       if (member.customerCode) {
         JsBarcode('#barcode-svg', member.customerCode, {
           format: 'CODE128',
           width: 2.5,
-          height: 80,
+          height: 72,
           displayValue: true,
-          fontSize: 14,
+          fontSize: 13,
           margin: 10,
+          background: '#ffffff',
+          lineColor: '#2c2c2c',
         });
       }
 
-      // 購入履歴取得
       const historyRes = await fetch(`/api/liff/history?lineUserId=${lineUserId}`);
       const historyData = await historyRes.json();
       renderHistory(historyData.history);
