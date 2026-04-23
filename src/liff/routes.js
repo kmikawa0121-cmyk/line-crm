@@ -22,6 +22,7 @@ router.get('/member', async (req, res) => {
       displayName: member.display_name,
       point: customer.point ?? 0,
       rank: customer.memberRank?.memberRankName ?? null,
+      customerCode: customer.customerCode ?? null, // バーコード用会員コード
     });
   } catch (err) {
     console.error('[LIFF /member Error]', err.message);
