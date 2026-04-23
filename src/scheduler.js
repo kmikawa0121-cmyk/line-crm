@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const db = require('./db');
 const { getClient } = require('./line/handler');
-const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage, getBirthdayMessage } = require('./line/messages');
+const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage, getBirthdayMessages } = require('./line/messages');
 const { getPurchaseHistory, getCustomerById } = require('./smaregi/api');
 
 /**
@@ -183,7 +183,7 @@ function startScheduler() {
 
         await getClient().pushMessage({
           to: member.line_user_id,
-          messages: [getBirthdayMessage(displayName)],
+          messages: getBirthdayMessages(displayName),
         });
 
         db.saveBirthdayMessage(member.id, thisYear);

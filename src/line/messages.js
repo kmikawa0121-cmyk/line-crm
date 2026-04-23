@@ -103,22 +103,150 @@ function getLongAbsenceMessage(reminderType, displayName) {
 }
 
 /**
- * 誕生日メッセージ
+ * 誕生日メッセージ＋クーポン（2件返す）
  * @param {string} displayName
+ * @returns {object[]} LINEメッセージ配列
  */
-function getBirthdayMessage(displayName) {
+function getBirthdayMessages(displayName) {
   const name = displayName || 'お客様';
-  return {
+
+  // 有効期限：今日から1ヶ月後
+  const expiry = new Date();
+  expiry.setMonth(expiry.getMonth() + 1);
+  const expiryStr = `${expiry.getFullYear()}年${expiry.getMonth() + 1}月${expiry.getDate()}日`;
+
+  const textMessage = {
     type: 'text',
-    text: `${name}様、お誕生日おめでとうございます🎂\n\n美川漢方堂スタッフ一同より、心よりお祝い申し上げます。\n\nお誕生日という特別な節目に、改めてご自身の体と向き合っていただけると嬉しいです。\n\n健康は、毎日の小さな積み重ねから生まれます。これからも${name}様の健やかな毎日を、美川漢方堂はそばで支えてまいります🌿\n\n素敵な一日をお過ごしください✨`,
+    text: `${name}様、お誕生日おめでとうございます🎂\n\n美川漢方堂スタッフ一同より、心よりお祝い申し上げます。\n\nお誕生日という特別な節目に、改めてご自身の体と向き合っていただけると嬉しいです。\n\n健康は、毎日の小さな積み重ねから生まれます。これからも${name}様の健やかな毎日を、美川漢方堂はそばで支えてまいります🌿\n\n本日はお誕生日特典として、5%OFFクーポンをお贈りします✨`,
   };
+
+  const couponMessage = {
+    type: 'flex',
+    altText: 'お誕生日特典クーポン 5%OFF',
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#2c2c2c',
+        paddingAll: '24px',
+        contents: [
+          {
+            type: 'text',
+            text: 'お誕生日特典',
+            color: '#c8960c',
+            size: 'sm',
+            letterSpacing: '3px',
+            margin: 'none',
+          },
+          {
+            type: 'text',
+            text: '5% OFF',
+            color: '#f2ede6',
+            size: '5xl',
+            weight: 'bold',
+            margin: 'sm',
+          },
+          {
+            type: 'text',
+            text: 'BIRTHDAY COUPON',
+            color: 'rgba(242,237,230,0.4)',
+            size: 'xs',
+            letterSpacing: '2px',
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#f2ede6',
+        paddingAll: '20px',
+        spacing: 'md',
+        contents: [
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              {
+                type: 'text',
+                text: '対象',
+                size: 'xs',
+                color: '#999999',
+                flex: 2,
+              },
+              {
+                type: 'text',
+                text: '全商品',
+                size: 'xs',
+                color: '#2c2c2c',
+                flex: 5,
+                weight: 'bold',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              {
+                type: 'text',
+                text: '有効期限',
+                size: 'xs',
+                color: '#999999',
+                flex: 2,
+              },
+              {
+                type: 'text',
+                text: `${expiryStr}まで`,
+                size: 'xs',
+                color: '#2c2c2c',
+                flex: 5,
+                weight: 'bold',
+              },
+            ],
+          },
+          {
+            type: 'separator',
+            color: '#e0d9d0',
+          },
+          {
+            type: 'text',
+            text: 'ご来店時にこの画面をスタッフにご提示ください',
+            size: 'xs',
+            color: '#aaaaaa',
+            wrap: true,
+            align: 'center',
+          },
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#2c2c2c',
+        paddingAll: '14px',
+        contents: [
+          {
+            type: 'text',
+            text: '美川漢方堂',
+            color: '#c8960c',
+            align: 'center',
+            size: 'sm',
+            letterSpacing: '4px',
+          },
+        ],
+      },
+    },
+  };
+
+  return [textMessage, couponMessage];
 }
 
 module.exports = {
   getFollowUpMessage,
   getReorderReminderMessage,
   getLongAbsenceMessage,
-  getBirthdayMessage,
+  getBirthdayMessages,
   getWelcomeMessage,
   getLinkSuccessMessage,
   getLinkFailMessage,
