@@ -191,6 +191,27 @@ function getBirthdayMessages(displayName) {
             contents: [
               {
                 type: 'text',
+                text: '条件',
+                size: 'xs',
+                color: '#999999',
+                flex: 2,
+              },
+              {
+                type: 'text',
+                text: '5,000円以上のお買い上げ',
+                size: 'xs',
+                color: '#2c2c2c',
+                flex: 5,
+                weight: 'bold',
+              },
+            ],
+          },
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              {
+                type: 'text',
                 text: '有効期限',
                 size: 'xs',
                 color: '#999999',
