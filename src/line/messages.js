@@ -110,19 +110,19 @@ function getLongAbsenceMessage(reminderType, displayName) {
 function getBirthdayMessages(displayName) {
   const name = displayName || 'お客様';
 
-  // 有効期限：今日から1ヶ月後
-  const expiry = new Date();
-  expiry.setMonth(expiry.getMonth() + 1);
-  const expiryStr = `${expiry.getFullYear()}年${expiry.getMonth() + 1}月${expiry.getDate()}日`;
+  // 有効期限：誕生月末日
+  const today = new Date();
+  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const expiryStr = `${lastDay.getFullYear()}年${lastDay.getMonth() + 1}月${lastDay.getDate()}日`;
 
   const textMessage = {
     type: 'text',
-    text: `${name}様、お誕生日おめでとうございます🎂\n\n美川漢方堂スタッフ一同より、心よりお祝い申し上げます。\n\nお誕生日という特別な節目に、改めてご自身の体と向き合っていただけると嬉しいです。\n\n健康は、毎日の小さな積み重ねから生まれます。これからも${name}様の健やかな毎日を、美川漢方堂はそばで支えてまいります🌿\n\n本日はお誕生日特典として、5%OFFクーポンをお贈りします✨`,
+    text: `${name}様、お誕生月おめでとうございます🎂\n\n美川漢方堂スタッフ一同より、心よりお祝い申し上げます。\n\nいつもご愛顧いただきありがとうございます。\nささやかではございますが、お誕生月の特典をご用意しました。\n\nご来店の際にLINEをご提示ください🌿`,
   };
 
   const couponMessage = {
     type: 'flex',
-    altText: 'お誕生日特典クーポン 5%OFF',
+    altText: 'お誕生月特典のご案内',
     contents: {
       type: 'bubble',
       size: 'mega',
@@ -134,7 +134,7 @@ function getBirthdayMessages(displayName) {
         contents: [
           {
             type: 'text',
-            text: 'お誕生日特典',
+            text: 'お誕生月特典',
             color: '#c8960c',
             size: 'sm',
             letterSpacing: '3px',
@@ -142,7 +142,7 @@ function getBirthdayMessages(displayName) {
           },
           {
             type: 'text',
-            text: '5% OFF',
+            text: '1,000 pt',
             color: '#f2ede6',
             size: '5xl',
             weight: 'bold',
@@ -150,10 +150,18 @@ function getBirthdayMessages(displayName) {
           },
           {
             type: 'text',
-            text: 'BIRTHDAY COUPON',
-            color: 'rgba(242,237,230,0.4)',
+            text: '＋ バースデープレゼント',
+            color: 'rgba(242,237,230,0.75)',
+            size: 'sm',
+            margin: 'sm',
+          },
+          {
+            type: 'text',
+            text: 'BIRTHDAY GIFT',
+            color: 'rgba(242,237,230,0.3)',
             size: 'xs',
             letterSpacing: '2px',
+            margin: 'sm',
           },
         ],
       },
@@ -168,63 +176,24 @@ function getBirthdayMessages(displayName) {
             type: 'box',
             layout: 'horizontal',
             contents: [
-              {
-                type: 'text',
-                text: '対象',
-                size: 'xs',
-                color: '#999999',
-                flex: 2,
-              },
-              {
-                type: 'text',
-                text: '全商品',
-                size: 'xs',
-                color: '#2c2c2c',
-                flex: 5,
-                weight: 'bold',
-              },
+              { type: 'text', text: '特典①', size: 'xs', color: '#999999', flex: 2 },
+              { type: 'text', text: '1,000ポイント進呈', size: 'xs', color: '#2c2c2c', flex: 5, weight: 'bold' },
             ],
           },
           {
             type: 'box',
             layout: 'horizontal',
             contents: [
-              {
-                type: 'text',
-                text: '条件',
-                size: 'xs',
-                color: '#999999',
-                flex: 2,
-              },
-              {
-                type: 'text',
-                text: '5,000円以上のお買い上げ',
-                size: 'xs',
-                color: '#2c2c2c',
-                flex: 5,
-                weight: 'bold',
-              },
+              { type: 'text', text: '特典②', size: 'xs', color: '#999999', flex: 2 },
+              { type: 'text', text: 'ささやかなプレゼント', size: 'xs', color: '#2c2c2c', flex: 5, weight: 'bold' },
             ],
           },
           {
             type: 'box',
             layout: 'horizontal',
             contents: [
-              {
-                type: 'text',
-                text: '有効期限',
-                size: 'xs',
-                color: '#999999',
-                flex: 2,
-              },
-              {
-                type: 'text',
-                text: `${expiryStr}まで`,
-                size: 'xs',
-                color: '#2c2c2c',
-                flex: 5,
-                weight: 'bold',
-              },
+              { type: 'text', text: '有効期限', size: 'xs', color: '#999999', flex: 2 },
+              { type: 'text', text: `${expiryStr}まで`, size: 'xs', color: '#2c2c2c', flex: 5, weight: 'bold' },
             ],
           },
           {

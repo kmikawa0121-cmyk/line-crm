@@ -39,11 +39,16 @@
     font-family: 'Noto Sans JP', sans-serif;
     letter-spacing: -1px;
   }
+  .header .sub2 {
+    color: rgba(242,237,230,0.75);
+    font-size: 14px;
+    margin-top: 6px;
+  }
   .header .sub {
-    color: rgba(242,237,230,0.35);
+    color: rgba(242,237,230,0.3);
     font-size: 11px;
     letter-spacing: 2px;
-    margin-top: 6px;
+    margin-top: 4px;
   }
   /* ボディ */
   .body {
@@ -95,18 +100,19 @@
 <body>
   <div class="bubble">
     <div class="header">
-      <div class="label">お誕生日特典</div>
-      <div class="discount">5% OFF</div>
-      <div class="sub">BIRTHDAY COUPON</div>
+      <div class="label">お誕生月特典</div>
+      <div class="discount">1,000 pt</div>
+      <div class="sub2">＋ バースデープレゼント</div>
+      <div class="sub">BIRTHDAY GIFT</div>
     </div>
     <div class="body">
       <div class="row">
-        <span class="key">対象</span>
-        <span class="val">全商品</span>
+        <span class="key">特典①</span>
+        <span class="val">1,000ポイント進呈</span>
       </div>
       <div class="row">
-        <span class="key">条件</span>
-        <span class="val">5,000円以上のお買い上げ</span>
+        <span class="key">特典②</span>
+        <span class="val">ささやかなプレゼント</span>
       </div>
       <div class="row">
         <span class="key">有効期限</span>
@@ -118,10 +124,10 @@
     <div class="footer">美川漢方堂</div>
   </div>
   <script>
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1);
+    const today = new Date();
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     document.getElementById('expiry').textContent =
-      `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日まで`;
+      `${lastDay.getFullYear()}年${lastDay.getMonth()+1}月${lastDay.getDate()}日まで`;
   </script>
 </body>
 </html>

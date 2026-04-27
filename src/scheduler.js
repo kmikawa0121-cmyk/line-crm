@@ -156,12 +156,12 @@ function startScheduler() {
 
   console.log('[Scheduler] 長期未来店リマインド起動（毎日11:00に実行）');
 
-  // 毎日朝9時に誕生日チェック
-  cron.schedule('0 9 * * *', async () => {
-    console.log('[Birthday] 誕生日チェック開始...');
+  // 毎月1日朝9時に誕生月チェック
+  cron.schedule('0 9 1 * *', async () => {
+    console.log('[Birthday] 誕生月チェック開始...');
     const members = db.getAllLinkedMembers();
     const today = new Date();
-    const todayMD = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const thisMonth = String(today.getMonth() + 1).padStart(2, '0'); // 現在の月 MM
     const thisYear = today.getFullYear();
 
     for (const member of members) {
@@ -170,9 +170,9 @@ function startScheduler() {
         if (!customer?.birthday) continue;
 
         // スマレジの誕生日フォーマット: YYYY-MM-DD or MM-DD
-        const birthday = customer.birthday.slice(-5); // MM-DD を取り出す
+        const birthMonth = customer.birthday.slice(-5, -3); // MM を取り出す
 
-        if (birthday !== todayMD) continue;
+        if (birthMonth !== thisMonth) continue;
         if (db.hasBirthdayMessage(member.id, thisYear)) continue;
 
         let displayName = member.display_name;
