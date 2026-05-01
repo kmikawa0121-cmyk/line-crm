@@ -9,7 +9,7 @@ function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
 
   if (!auth || !auth.startsWith('Basic ')) {
-    res.set('WWW-Authenticate', 'Basic realm="管理画面"');
+    res.set('WWW-Authenticate', 'Basic realm="Admin"');
     return res.status(401).send('認証が必要です');
   }
 
@@ -17,7 +17,7 @@ function requireAuth(req, res, next) {
   const [, pass] = decoded.split(':');
 
   if (pass !== password) {
-    res.set('WWW-Authenticate', 'Basic realm="管理画面"');
+    res.set('WWW-Authenticate', 'Basic realm="Admin"');
     return res.status(401).send('パスワードが違います');
   }
 
