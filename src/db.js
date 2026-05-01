@@ -1,7 +1,17 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const db = new Database(path.join(__dirname, '../data.db'));
+// DB_PATH 環境変数があればそこに保存（Railway Volume用）、なければローカル
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../data.db');
+
+// ディレクトリが存在しない場合は作成
+const dbDir = path.dirname(DB_PATH);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const db = new Database(DB_PATH);
 
 // テーブル初期化
 db.exec(`
