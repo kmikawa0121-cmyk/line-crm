@@ -23,7 +23,7 @@ function getFollowUpMessage(messageType, displayName) {
 
   return templates[messageType] || {
     type: 'text',
-    text: `${name}、いつもご利用ありがとうございます。またのご来店をお待ちしております。`,
+    text: `${name}様、いつもご利用ありがとうございます。またのご来店をお待ちしております。`,
   };
 }
 
@@ -37,7 +37,7 @@ function getWelcomeMessage() {
 function getLinkSuccessMessage(displayName) {
   return {
     type: 'text',
-    text: `${displayName || 'お客様'}、連携が完了しました✅\n\nこれから、あなたの体づくりに寄り添うメッセージをお届けします。\n\n漢方や健康食品は、毎日続けることで、じわじわと体の奥から整えていくものです。\n\n「続けること」が、きっと未来のあなたへの贈り物になります🌿\n\nいつでも相談してください。一緒に歩んでいきましょう。`,
+    text: `${displayName || 'お客様'}様、連携が完了しました✅\n\nこれから、あなたの体づくりに寄り添うメッセージをお届けします。\n\n漢方や健康食品は、毎日続けることで、じわじわと体の奥から整えていくものです。\n\n「続けること」が、きっと未来のあなたへの贈り物になります🌿\n\nいつでも相談してください。一緒に歩んでいきましょう。`,
   };
 }
 
