@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const db = require('../db');
 
@@ -25,7 +26,13 @@ function requireAuth(req, res, next) {
 
 // 管理画面HTML
 router.get('/', requireAuth, (req, res) => {
-  res.sendFile('admin/index.html', { root: require('path').join(__dirname, '../../public') });
+  const filePath = path.resolve(__dirname, '../../public/admin/index.html');
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error('[Admin] sendFile error:', err);
+      res.status(500).send('管理画面の読み込みに失敗しました');
+    }
+  });
 });
 
 // 会員一覧API
