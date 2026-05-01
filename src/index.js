@@ -8,6 +8,7 @@ const { handleLineWebhook, initLineClient } = require('./line/handler');
 const { handleSmaregiWebhook } = require('./smaregi/webhook');
 const { startScheduler } = require('./scheduler');
 const liffRoutes = require('./liff/routes');
+const { router: adminRouter } = require('./admin/routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,9 @@ app.post('/webhook/smaregi', express.json(), handleSmaregiWebhook);
 
 // LIFF API
 app.use('/api/liff', express.json(), liffRoutes);
+
+// 管理画面
+app.use('/admin', adminRouter);
 
 // LIFF 画面（LIFF_IDを環境変数から埋め込んで配信）
 app.get('/liff', (req, res) => {

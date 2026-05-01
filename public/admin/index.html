@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理画面 | 美川漢方堂</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f2ede6;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: #2c2c2c;
+    min-height: 100vh;
+  }
+
+  header {
+    background: #2c2c2c;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    font-family: 'Noto Serif JP', serif;
+    color: #c8960c;
+    font-size: 18px;
+    letter-spacing: 4px;
+    font-weight: 400;
+  }
+  header span {
+    color: rgba(242,237,230,0.5);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 28px;
+    flex: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .stat-card .label {
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .stat-card .value {
+    font-size: 36px;
+    font-weight: 500;
+    color: #2c2c2c;
+    line-height: 1;
+  }
+  .stat-card .unit {
+    font-size: 14px;
+    color: #999;
+    margin-left: 4px;
+  }
+
+  .table-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0ebe4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .table-header h2 {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: #2c2c2c;
+  }
+
+  .btn-csv {
+    background: #2c2c2c;
+    color: #c8960c;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-csv:hover { background: #3d3d3d; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th {
+    background: #f8f5f0;
+    padding: 12px 24px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    color: #999;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #f0ebe4;
+  }
+  td {
+    padding: 14px 24px;
+    font-size: 13px;
+    border-bottom: 1px solid #f8f5f0;
+    color: #2c2c2c;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #faf7f3; }
+
+  .badge {
+    display: inline-block;
+    background: #f0ebe4;
+    color: #999;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .gold-line {
+    height: 3px;
+    background: linear-gradient(90deg, #c8960c, #e8b84b, #c8960c);
+  }
+
+  .empty {
+    text-align: center;
+    padding: 48px;
+    color: #bbb;
+    font-size: 13px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 48px;
+    color: #bbb;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>美川漢方堂　管理画面</h1>
+  <span>LINE CRM</span>
+</header>
+<div class="gold-line"></div>
+
+<div class="container">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">LINE連携済み会員数</div>
+      <div class="value" id="totalCount">—<span class="unit">名</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="label">最終連携日</div>
+      <div class="value" style="font-size:20px; padding-top:8px;" id="lastRegistered">—</div>
+    </div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <h2>連携済み会員一覧</h2>
+      <a href="/admin/api/members/csv" class="btn-csv">CSVダウンロード</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>LINE名</th>
+          <th>スマレジ顧客ID</th>
+          <th>連携日時</th>
+        </tr>
+      </thead>
+      <tbody id="memberList">
+        <tr><td colspan="3" class="loading">読み込み中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  async function loadMembers() {
+    try {
+      const res = await fetch('/admin/api/members');
+      const members = await res.json();
+
+      const totalEl = document.getElementById('totalCount');
+      totalEl.innerHTML = `${members.length}<span class="unit">名</span>`;
+
+      const tbody = document.getElementById('memberList');
+
+      if (members.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty">連携済み会員がいません</td></tr>';
+        return;
+      }
+
+      // 最終連携日（最新順）
+      const sorted = [...members].sort((a, b) =>
+        new Date(b.registered_at) - new Date(a.registered_at)
+      );
+      const lastDate = new Date(sorted[0].registered_at);
+      document.getElementById('lastRegistered').textContent =
+        `${lastDate.getFullYear()}/${String(lastDate.getMonth()+1).padStart(2,'0')}/${String(lastDate.getDate()).padStart(2,'0')}`;
+
+      tbody.innerHTML = sorted.map(m => {
+        const date = m.registered_at
+          ? new Date(m.registered_at).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
+          : '—';
+        const name = m.display_name || `<span class="badge">名前未取得</span>`;
+        return `
+          <tr>
+            <td>${name}</td>
+            <td>${m.smaregi_customer_id || '—'}</td>
+            <td style="color:#999; font-size:12px;">${date}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      document.getElementById('memberList').innerHTML =
+        '<tr><td colspan="3" class="empty">データの取得に失敗しました</td></tr>';
+    }
+  }
+
+  loadMembers();
+</script>
+</body>
+</html>
