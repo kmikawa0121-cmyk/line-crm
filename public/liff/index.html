@@ -238,7 +238,10 @@
 </header>
 
 <div id="loading">読み込み中...</div>
-<div id="error-msg">会員情報が見つかりませんでした。<br>LINEトーク画面から会員番号をご入力ください。</div>
+<div id="error-msg">
+  <p id="error-text">会員情報が見つかりませんでした。<br>LINEトーク画面から会員番号をご入力ください。</p>
+  <button id="retry-btn" onclick="location.reload()" style="display:none; margin-top:16px; padding:10px 24px; background:#2c2c2c; color:#c8960c; border:none; border-radius:8px; font-size:13px; font-family:inherit; letter-spacing:0.1em; cursor:pointer;">再読み込み</button>
+</div>
 
 <div id="main">
 
@@ -291,8 +294,13 @@
 
       const memberRes = await fetch(`/api/liff/member?lineUserId=${lineUserId}`);
       if (!memberRes.ok) {
+        const errData = await memberRes.json().catch(() => ({}));
         document.getElementById('loading').style.display = 'none';
         document.getElementById('error-msg').style.display = 'block';
+        if (errData.error === 'smaregi_error') {
+          document.getElementById('error-text').innerHTML = '情報の取得に失敗しました。<br>しばらく待ってから再度お試しください。';
+          document.getElementById('retry-btn').style.display = 'inline-block';
+        }
         return;
       }
       const member = await memberRes.json();
@@ -322,7 +330,10 @@
 
     } catch (err) {
       console.error(err);
-      document.getElementById('loading').textContent = 'エラーが発生しました。';
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error-text').innerHTML = 'エラーが発生しました。<br>再読み込みをお試しください。';
+      document.getElementById('retry-btn').style.display = 'inline-block';
+      document.getElementById('error-msg').style.display = 'block';
     }
   }
 
