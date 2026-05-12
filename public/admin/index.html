@@ -223,7 +223,7 @@
 
       tbody.innerHTML = sorted.map(m => {
         const date = m.registered_at
-          ? new Date(m.registered_at).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
+          ? new Date(m.registered_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
           : '—';
         const name = m.display_name || `<span class="badge">名前未取得</span>`;
         return `
