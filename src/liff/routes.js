@@ -18,6 +18,7 @@ router.get('/member', async (req, res) => {
 
   try {
     const customer = await getCustomerById(member.smaregi_customer_id);
+    console.log('[LIFF /member] Smaregi customer data:', JSON.stringify(customer));
     res.json({
       displayName: member.display_name,
       point: customer.point ?? 0,
