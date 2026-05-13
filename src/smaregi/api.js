@@ -62,7 +62,10 @@ async function getCustomerById(customerId) {
 
   const response = await axios.get(
     `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/customers/${customerId}`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { with_point: 1 },
+    }
   );
   return response.data;
 }
