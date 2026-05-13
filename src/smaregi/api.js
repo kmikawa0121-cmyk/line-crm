@@ -61,13 +61,14 @@ async function getCustomerById(customerId) {
   const { SMAREGI_CONTRACT_ID } = process.env;
 
   const response = await axios.get(
-    `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/customers/${customerId}`,
+    `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/customers`,
     {
       headers: { Authorization: `Bearer ${token}` },
-      params: { with_point: 1 },
+      params: { customer_id: customerId, limit: 1 },
     }
   );
-  return response.data;
+  const customers = response.data;
+  return customers.length > 0 ? customers[0] : null;
 }
 
 /**
