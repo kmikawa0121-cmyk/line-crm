@@ -68,6 +68,27 @@ async function getCustomerById(customerId) {
 }
 
 /**
+ * スマレジ顧客のポイント残高を取得
+ * GET /pos/customers/point?customer_id={customerId}
+ * @param {string} customerId
+ * @returns {number} ポイント残高
+ */
+async function getCustomerPoint(customerId) {
+  const token = await getAccessToken();
+  const { SMAREGI_CONTRACT_ID } = process.env;
+
+  const response = await axios.get(
+    `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/customers/point`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { customer_id: customerId, limit: 1 },
+    }
+  );
+  const data = response.data;
+  return data.length > 0 ? Number(data[0].point) : 0;
+}
+
+/**
  * スマレジ顧客の購入履歴を取得（最新10件）
  * @param {string} customerId
  */
@@ -89,4 +110,4 @@ async function getPurchaseHistory(customerId) {
   return response.data;
 }
 
-module.exports = { findCustomerByMemberCode, getCustomerById, getPurchaseHistory };
+module.exports = { findCustomerByMemberCode, getCustomerById, getCustomerPoint, getPurchaseHistory };

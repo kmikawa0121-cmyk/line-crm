@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { getCustomerById, getPurchaseHistory } = require('../smaregi/api');
+const { getCustomerById, getCustomerPoint, getPurchaseHistory } = require('../smaregi/api');
 
 /**
  * GET /api/liff/member?lineUserId=xxx
@@ -17,13 +17,15 @@ router.get('/member', async (req, res) => {
   }
 
   try {
-    const customer = await getCustomerById(member.smaregi_customer_id);
-    console.log('[LIFF /member] Smaregi customer data:', JSON.stringify(customer));
+    const [customer, point] = await Promise.all([
+      getCustomerById(member.smaregi_customer_id),
+      getCustomerPoint(member.smaregi_customer_id),
+    ]);
     res.json({
       displayName: member.display_name,
-      point: customer.point ?? 0,
+      point: point,
       rank: customer.memberRank?.memberRankName ?? null,
-      customerCode: customer.customerCode ?? null, // バーコード用会員コード
+      customerCode: customer.customerCode ?? null,
     });
   } catch (err) {
     console.error('[LIFF /member Error]', err.message);
