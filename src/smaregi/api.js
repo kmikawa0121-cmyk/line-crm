@@ -89,24 +89,54 @@ async function getCustomerPoint(customerId) {
 }
 
 /**
- * スマレジ顧客の購入履歴を取得（最新10件）
- * @param {string} customerId
+ * スマレジ顧客の購入履歴を取得（customerCodeを使用、直近3ヶ月）
+ * ※ トランザクションAPIは日付範囲必須・最大31日のため複数回呼び出す
+ * @param {string} customerCode  バーコード会員コード（customer_code）
+ * @returns {Array} 取引一覧（日付降順）
  */
-async function getPurchaseHistory(customerId) {
+async function getPurchaseHistory(customerCode) {
   const token = await getAccessToken();
   const { SMAREGI_CONTRACT_ID } = process.env;
 
-  const response = await axios.get(
-    `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/transactions`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-      params: {
-        customer_id: customerId,
-        limit: 100,
-      },
+  const allTransactions = [];
+  const now = new Date();
+
+  // 直近3ヶ月を31日ずつ3回に分けて取得
+  for (let i = 0; i < 3; i++) {
+    const toDate = new Date(now);
+    toDate.setDate(toDate.getDate() - i * 31);
+    const fromDate = new Date(toDate);
+    fromDate.setDate(fromDate.getDate() - 31);
+
+    const fmt = (d) => d.toISOString().slice(0, 10) + ' 00:00:00';
+
+    try {
+      const response = await axios.get(
+        `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/transactions`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            customer_code: customerCode,
+            'transaction_date_time-from': fmt(fromDate),
+            'transaction_date_time-to': fmt(toDate),
+            limit: 100,
+          },
+        }
+      );
+      if (Array.isArray(response.data)) {
+        allTransactions.push(...response.data);
+      }
+    } catch (e) {
+      console.error(`[getPurchaseHistory] window ${i} error:`, e.message);
     }
+  }
+
+  // 日付降順でソート
+  allTransactions.sort((a, b) =>
+    new Date(b.transactionDateTime) - new Date(a.transactionDateTime)
   );
-  return response.data;
+
+  return allTransactions;
 }
 
 module.exports = { findCustomerByMemberCode, getCustomerById, getCustomerPoint, getPurchaseHistory };

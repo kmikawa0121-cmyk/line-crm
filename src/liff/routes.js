@@ -47,7 +47,8 @@ router.get('/history', async (req, res) => {
   }
 
   try {
-    const transactions = await getPurchaseHistory(member.smaregi_customer_id);
+    const customer = await getCustomerById(member.smaregi_customer_id);
+    const transactions = await getPurchaseHistory(customer.customerCode);
     console.log('[LIFF /history] transactions count:', transactions?.length, 'first:', JSON.stringify(transactions?.[0]));
     const history = transactions.map((t) => ({
       date: t.transactionDateTime?.slice(0, 10) ?? '',
