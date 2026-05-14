@@ -102,8 +102,7 @@ async function getPurchaseHistory(customerId) {
       headers: { Authorization: `Bearer ${token}` },
       params: {
         customer_id: customerId,
-        sort: 'transaction_date_time:desc',
-        limit: 1000,
+        limit: 100,
       },
     }
   );
