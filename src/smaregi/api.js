@@ -116,16 +116,19 @@ async function getPurchaseHistory(customerId) {
         {
           headers: { Authorization: `Bearer ${token}` },
           params: {
-            customer_id: customerId,
             'transaction_date_time-from': fmt(fromDate),
             'transaction_date_time-to': fmt(toDate),
-            limit: 100,
+            limit: 1000,
           },
         }
       );
-      console.log(`[getPurchaseHistory] window ${i}: ${response.data?.length ?? 0} transactions`);
       if (Array.isArray(response.data)) {
-        allTransactions.push(...response.data);
+        // 全取引のうちこの顧客のものだけを抽出
+        const matched = response.data.filter(t =>
+          String(t.customerId) === String(customerId)
+        );
+        console.log(`[getPurchaseHistory] window ${i}: total=${response.data.length} matched=${matched.length} (first raw: ${JSON.stringify(response.data[0]?.customerId)})`);
+        allTransactions.push(...matched);
       }
     } catch (e) {
       const detail = e.response?.data ? JSON.stringify(e.response.data) : e.message;
