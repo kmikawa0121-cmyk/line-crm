@@ -42,7 +42,7 @@
       font-size: 11px;
       margin-top: 6px;
       letter-spacing: 0.15em;
-      opacity: 0.65;
+      opacity: 0.85;
     }
 
     /* ローディング・エラー */
@@ -125,8 +125,8 @@
       letter-spacing: 0.1em;
     }
     .member-card .point-label {
-      font-size: 10px;
-      color: rgba(242,237,230,0.5);
+      font-size: 11px;
+      color: rgba(242,237,230,0.8);
       margin-top: 4px;
       letter-spacing: 0.1em;
     }
@@ -134,7 +134,7 @@
       height: 1px;
       background: linear-gradient(to right, #c8960c, transparent);
       margin: 16px 0;
-      opacity: 0.5;
+      opacity: 0.7;
     }
 
     /* バーコード */
@@ -147,17 +147,17 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
     .barcode-card .section-title {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      color: #999;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      color: #666;
       margin-bottom: 14px;
     }
     #barcode-svg {
       max-width: 100%;
     }
     .barcode-card .barcode-note {
-      font-size: 10px;
-      color: #bbb;
+      font-size: 11px;
+      color: #888;
       margin-top: 8px;
       letter-spacing: 0.05em;
     }
@@ -171,12 +171,13 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
     .section-title {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      color: #999;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: #444;
       margin-bottom: 14px;
       padding-bottom: 10px;
-      border-bottom: 1px solid #f0ebe3;
+      border-bottom: 1px solid #e8e0d6;
     }
 
     /* 購入履歴 */
@@ -191,21 +192,21 @@
       align-items: center;
       font-size: 13px;
     }
-    .history-date { color: #aaa; font-size: 12px; letter-spacing: 0.03em; }
-    .history-total { font-weight: 500; color: #2c2c2c; }
+    .history-date { color: #777; font-size: 13px; letter-spacing: 0.03em; }
+    .history-total { font-weight: 500; color: #2c2c2c; font-size: 14px; }
     .history-products {
-      margin-top: 4px;
+      margin-top: 5px;
       padding-left: 2px;
     }
     .history-product {
-      font-size: 11px;
-      color: #999;
-      line-height: 1.7;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.8;
     }
     .no-history {
       text-align: center;
-      color: #bbb;
-      font-size: 12px;
+      color: #999;
+      font-size: 13px;
       padding: 16px 0;
       letter-spacing: 0.05em;
     }
@@ -266,7 +267,7 @@
       <span class="point-num" id="point-value">0</span>
       <span class="point-unit">pt</span>
     </div>
-    <div style="font-size:10px; color:rgba(242,237,230,0.45); text-align:center; margin-top:10px; line-height:1.6; letter-spacing:0.03em;">※2年間当店でのご利用が無い場合､<br>ポイントが失効致しますのでご注意ください</div>
+    <div style="font-size:11px; color:rgba(242,237,230,0.7); text-align:center; margin-top:10px; line-height:1.6; letter-spacing:0.03em;">※2年間当店でのご利用が無い場合､<br>ポイントが失効致しますのでご注意ください</div>
   </div>
 
   <!-- バーコード -->
@@ -278,7 +279,7 @@
 
   <!-- 購入履歴 -->
   <div class="section">
-    <div class="section-title">PURCHASE HISTORY</div>
+    <div class="section-title">購入履歴</div>
     <div id="history-list"><div class="no-history">履歴を読み込み中...</div></div>
   </div>
 
