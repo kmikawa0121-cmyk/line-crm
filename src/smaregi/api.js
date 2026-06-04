@@ -144,4 +144,20 @@ async function getPurchaseHistory(customerId) {
   return allTransactions;
 }
 
-module.exports = { findCustomerByMemberCode, getCustomerById, getCustomerPoint, getPurchaseHistory };
+/**
+ * トランザクション詳細（商品明細）を取得
+ * @param {string} transactionHeadId
+ * @returns {Array} 明細一覧
+ */
+async function getTransactionDetails(transactionHeadId) {
+  const token = await getAccessToken();
+  const { SMAREGI_CONTRACT_ID } = process.env;
+
+  const response = await axios.get(
+    `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/transactions/${transactionHeadId}/details`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return Array.isArray(response.data) ? response.data : [];
+}
+
+module.exports = { findCustomerByMemberCode, getCustomerById, getCustomerPoint, getPurchaseHistory, getTransactionDetails };

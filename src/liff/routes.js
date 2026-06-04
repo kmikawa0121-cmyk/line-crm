@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { getCustomerById, getCustomerPoint, getPurchaseHistory } = require('../smaregi/api');
+const { getCustomerById, getCustomerPoint, getPurchaseHistory, getTransactionDetails } = require('../smaregi/api');
 
 /**
  * GET /api/liff/member?lineUserId=xxx
@@ -51,11 +51,28 @@ router.get('/history', async (req, res) => {
     console.log('[LIFF /history] customerId:', member.smaregi_customer_id, '/ customerCode:', customer.customerCode);
     const transactions = await getPurchaseHistory(member.smaregi_customer_id);
     console.log('[LIFF /history] transactions count:', transactions?.length, 'first:', JSON.stringify(transactions?.[0]));
-    const history = transactions.map((t) => ({
+    const baseHistory = transactions.map((t) => ({
       date: t.transactionDateTime?.slice(0, 10) ?? '',
       total: t.total ?? t.subtotal ?? 0,
       id: t.transactionHeadId,
     }));
+
+    // 各取引の商品明細を並列取得
+    const history = await Promise.all(
+      baseHistory.map(async (item) => {
+        try {
+          const details = await getTransactionDetails(item.id);
+          const items = details.map((d) => ({
+            name: d.productName ?? d.productCode ?? '商品',
+            price: Number(d.price ?? 0),
+            qty: Number(d.quantity ?? 1),
+          }));
+          return { ...item, items };
+        } catch (e) {
+          return { ...item, items: [] };
+        }
+      })
+    );
     res.json({ history });
   } catch (err) {
     console.error('[LIFF /history Error]', err.message);

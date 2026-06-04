@@ -181,16 +181,27 @@
 
     /* 購入履歴 */
     .history-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f1eb;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #f5f1eb;
       font-size: 13px;
     }
-    .history-item:last-child { border-bottom: none; }
     .history-date { color: #aaa; font-size: 12px; letter-spacing: 0.03em; }
     .history-total { font-weight: 500; color: #2c2c2c; }
+    .history-products {
+      margin-top: 4px;
+      padding-left: 2px;
+    }
+    .history-product {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.7;
+    }
     .no-history {
       text-align: center;
       color: #bbb;
@@ -344,12 +355,22 @@
       list.innerHTML = '<div class="no-history">購入履歴がありません</div>';
       return;
     }
-    list.innerHTML = history.map(item => `
-      <div class="history-item">
-        <span class="history-date">${item.date}</span>
-        <span class="history-total">¥${Number(item.total).toLocaleString()}</span>
-      </div>
-    `).join('');
+    list.innerHTML = history.map(item => {
+      const productsHtml = item.items && item.items.length > 0
+        ? `<div class="history-products">${item.items.map(p =>
+            `<div class="history-product">・${p.name}　¥${p.price.toLocaleString()} × ${p.qty}</div>`
+          ).join('')}</div>`
+        : '';
+      return `
+        <div class="history-item">
+          <div class="history-item-header">
+            <span class="history-date">${item.date}</span>
+            <span class="history-total">¥${Number(item.total).toLocaleString()}</span>
+          </div>
+          ${productsHtml}
+        </div>
+      `;
+    }).join('');
   }
 
   init();
