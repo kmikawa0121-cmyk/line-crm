@@ -89,12 +89,12 @@ async function getCustomerPoint(customerId) {
 }
 
 /**
- * スマレジ顧客の購入履歴を取得（customerCodeを使用、直近3ヶ月）
+ * スマレジ顧客の購入履歴を取得（customerId使用、直近3ヶ月）
  * ※ トランザクションAPIは日付範囲必須・最大31日のため複数回呼び出す
- * @param {string} customerCode  バーコード会員コード（customer_code）
+ * @param {string} customerId  スマレジ内部顧客ID
  * @returns {Array} 取引一覧（日付降順）
  */
-async function getPurchaseHistory(customerCode) {
+async function getPurchaseHistory(customerId) {
   const token = await getAccessToken();
   const { SMAREGI_CONTRACT_ID } = process.env;
 
@@ -116,13 +116,14 @@ async function getPurchaseHistory(customerCode) {
         {
           headers: { Authorization: `Bearer ${token}` },
           params: {
-            customer_code: customerCode,
+            customer_id: customerId,
             'transaction_date_time-from': fmt(fromDate),
             'transaction_date_time-to': fmt(toDate),
             limit: 100,
           },
         }
       );
+      console.log(`[getPurchaseHistory] window ${i}: ${response.data?.length ?? 0} transactions`);
       if (Array.isArray(response.data)) {
         allTransactions.push(...response.data);
       }
