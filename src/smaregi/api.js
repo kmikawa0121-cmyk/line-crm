@@ -101,12 +101,12 @@ async function getPurchaseHistory(customerId) {
   const allTransactions = [];
   const now = new Date();
 
-  // 直近3ヶ月を31日ずつ3回に分けて取得
-  for (let i = 0; i < 3; i++) {
+  // 直近4ヶ月を30日ずつ4回に分けて取得（APIの31日制限対応）
+  for (let i = 0; i < 4; i++) {
     const toDate = new Date(now);
-    toDate.setDate(toDate.getDate() - i * 31);
+    toDate.setDate(toDate.getDate() - i * 30);
     const fromDate = new Date(toDate);
-    fromDate.setDate(fromDate.getDate() - 31);
+    fromDate.setDate(fromDate.getDate() - 30);
 
     const fmt = (d) => d.toISOString().replace(/\.\d{3}Z$/, '+00:00');
 
