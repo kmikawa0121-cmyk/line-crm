@@ -127,7 +127,8 @@ async function getPurchaseHistory(customerCode) {
         allTransactions.push(...response.data);
       }
     } catch (e) {
-      console.error(`[getPurchaseHistory] window ${i} error:`, e.message);
+      const detail = e.response?.data ? JSON.stringify(e.response.data) : e.message;
+      console.error(`[getPurchaseHistory] window ${i} error: ${e.response?.status} / ${detail}`);
     }
   }
 
