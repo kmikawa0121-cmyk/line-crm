@@ -1,6 +1,6 @@
 const db = require('../db');
 const { getFollowUpDays } = require('../config/followup');
-const { scheduleMessage } = require('../db');
+const { scheduleMessage, getPurchaseCount } = require('../db');
 
 /**
  * スマレジのWebhookイベントを処理する
@@ -44,6 +44,13 @@ async function handleSmaregiWebhook(req, res) {
 
       const purchaseId = result.lastInsertRowid;
       const purchasedAt = new Date(transaction.transactionDateTime || Date.now());
+
+      // 初回購入のみフォローアップを送る
+      const purchaseCount = getPurchaseCount(member.id);
+      if (purchaseCount > 1) {
+        console.log(`[Smaregi] 会員${member.id} → 2回目以降の購入のためフォローアップなし`);
+        continue;
+      }
 
       // フォローアップのスケジュール登録
       const days = getFollowUpDays(productCodes);

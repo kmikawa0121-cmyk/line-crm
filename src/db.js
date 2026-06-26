@@ -93,6 +93,11 @@ function savePurchase(memberId, transactionId, productCodes, purchasedAt) {
   ).run(memberId, transactionId, JSON.stringify(productCodes), purchasedAt);
 }
 
+function getPurchaseCount(memberId) {
+  const row = db.prepare('SELECT COUNT(*) as cnt FROM purchases WHERE member_id = ?').get(memberId);
+  return row.cnt;
+}
+
 // --- scheduled_messages ---
 
 function scheduleMessage(memberId, purchaseId, messageType, scheduledAt) {
@@ -165,6 +170,7 @@ module.exports = {
   createMember,
   linkMember,
   savePurchase,
+  getPurchaseCount,
   scheduleMessage,
   getPendingMessages,
   markMessageSent,
