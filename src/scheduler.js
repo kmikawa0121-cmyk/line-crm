@@ -4,6 +4,14 @@ const { getClient } = require('./line/handler');
 const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage, getBirthdayMessages } = require('./line/messages');
 const { getPurchaseHistory, getCustomerById, getTransactionDetails } = require('./smaregi/api');
 const { sendDmReminder } = require('./email');
+const japaneseHolidays = require('japanese-holidays');
+
+function isBusinessDay(date) {
+  const day = date.getDay();
+  if (day === 0) return false; // 日曜
+  if (japaneseHolidays.isHoliday(date)) return false; // 祝日
+  return true;
+}
 
 /**
  * 毎時0分に未送信のスケジュールメッセージを確認して送信
@@ -199,8 +207,12 @@ function startScheduler() {
 
   console.log('[Scheduler] 誕生日メッセージ起動（毎日9:00に実行）');
 
-  // 毎日朝8時に紙DM送付リマインドチェック（1通にまとめて送信）
+  // 毎日朝8時に紙DM送付リマインドチェック（日曜・祝日はスキップ）
   cron.schedule('0 8 * * *', async () => {
+    if (!isBusinessDay(new Date())) {
+      console.log('[DM Reminder] 日曜日または祝日のためスキップ');
+      return;
+    }
     console.log('[DM Reminder] チェック開始...');
     const members = db.getAllLinkedMembers();
     const targets = []; // { name, smaregiId, reason, refDate, type, memberId, customer }
