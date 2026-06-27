@@ -61,6 +61,16 @@ db.exec(`
     sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (member_id) REFERENCES members(id)
   );
+
+  CREATE TABLE IF NOT EXISTS dm_reminders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id INTEGER NOT NULL,
+    reminder_type TEXT NOT NULL,   -- 'first_3day' | '30day' | '60day'
+    reference_date TEXT NOT NULL,  -- 基準日（初回購入日 or 最終購入日）
+    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(member_id, reminder_type, reference_date),
+    FOREIGN KEY (member_id) REFERENCES members(id)
+  );
 `);
 
 // --- members ---
@@ -164,6 +174,28 @@ function saveReorderReminder(memberId, reminderType, lastPurchaseDate) {
   ).run(memberId, reminderType, lastPurchaseDate);
 }
 
+// --- dm_reminders ---
+
+function hasDmReminder(memberId, reminderType, referenceDate) {
+  const row = db.prepare(
+    'SELECT id FROM dm_reminders WHERE member_id = ? AND reminder_type = ? AND reference_date = ?'
+  ).get(memberId, reminderType, referenceDate);
+  return !!row;
+}
+
+function saveDmReminder(memberId, reminderType, referenceDate) {
+  return db.prepare(
+    'INSERT OR IGNORE INTO dm_reminders (member_id, reminder_type, reference_date) VALUES (?, ?, ?)'
+  ).run(memberId, reminderType, referenceDate);
+}
+
+// 初回購入日を取得
+function getFirstPurchase(memberId) {
+  return db.prepare(
+    'SELECT * FROM purchases WHERE member_id = ? ORDER BY purchased_at ASC LIMIT 1'
+  ).get(memberId);
+}
+
 module.exports = {
   findMemberByLineId,
   findMemberBySmaregiId,
@@ -180,4 +212,7 @@ module.exports = {
   saveReorderReminder,
   hasBirthdayMessage,
   saveBirthdayMessage,
+  hasDmReminder,
+  saveDmReminder,
+  getFirstPurchase,
 };

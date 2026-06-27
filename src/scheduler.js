@@ -3,6 +3,7 @@ const db = require('./db');
 const { getClient } = require('./line/handler');
 const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage, getBirthdayMessages } = require('./line/messages');
 const { getPurchaseHistory, getCustomerById } = require('./smaregi/api');
+const { sendDmReminder } = require('./email');
 
 /**
  * 毎時0分に未送信のスケジュールメッセージを確認して送信
@@ -197,6 +198,100 @@ function startScheduler() {
   });
 
   console.log('[Scheduler] 誕生日メッセージ起動（毎日9:00に実行）');
+
+  // 毎日朝8時に紙DM送付リマインドチェック（1通にまとめて送信）
+  cron.schedule('0 8 * * *', async () => {
+    console.log('[DM Reminder] チェック開始...');
+    const members = db.getAllLinkedMembers();
+    const targets = []; // { name, smaregiId, reason, refDate, type, memberId, customer }
+
+    for (const member of members) {
+      const name = member.display_name || `顧客ID: ${member.smaregi_customer_id}`;
+
+      // ① 初回購入3日後
+      try {
+        const firstPurchase = db.getFirstPurchase(member.id);
+        if (firstPurchase) {
+          const firstDate = firstPurchase.purchased_at.slice(0, 10);
+          const daysSince = Math.floor(
+            (Date.now() - new Date(firstDate).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysSince >= 3 && daysSince < 6 && !db.hasDmReminder(member.id, 'first_3day', firstDate)) {
+            targets.push({ name, smaregiId: member.smaregi_customer_id, reason: '初回購入から3日', refDate: firstDate, type: 'first_3day', memberId: member.id });
+          }
+        }
+      } catch (err) {
+        console.error(`[DM Reminder] 初回チェックエラー member_id=${member.id}:`, err.message);
+      }
+
+      // ② 最終購入30日・60日後
+      try {
+        const transactions = await getPurchaseHistory(member.smaregi_customer_id);
+        if (!transactions || transactions.length === 0) continue;
+        const lastDate = transactions[0].transactionDateTime?.slice(0, 10);
+        if (!lastDate) continue;
+        const daysSince = Math.floor(
+          (Date.now() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        for (const { days, type, label } of [{ days: 30, type: '30day', label: '最終購入から30日' }, { days: 60, type: '60day', label: '最終購入から60日' }]) {
+          if (daysSince >= days && daysSince < days + 3 && !db.hasDmReminder(member.id, type, lastDate)) {
+            targets.push({ name, smaregiId: member.smaregi_customer_id, reason: label, refDate: lastDate, type, memberId: member.id });
+          }
+        }
+      } catch (err) {
+        console.error(`[DM Reminder] 定期チェックエラー member_id=${member.id}:`, err.message);
+      }
+    }
+
+    if (targets.length === 0) {
+      console.log('[DM Reminder] 本日の対象者なし');
+      return;
+    }
+
+    // スマレジから住所・電話番号を取得
+    for (const t of targets) {
+      try {
+        const customer = await getCustomerById(t.smaregiId);
+        t.customer = customer;
+      } catch (_) {
+        t.customer = null;
+      }
+    }
+
+    // メール本文を組み立て
+    const today = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    let body = `${today} 紙DM送付リマインド（${targets.length}名）\n`;
+    body += '='.repeat(50) + '\n\n';
+
+    for (const t of targets) {
+      const c = t.customer;
+      const fullName = c ? [c.lastName, c.firstName].filter(Boolean).join(' ') || t.name : t.name;
+      const zip = c?.zipCode ? `〒${c.zipCode}` : '';
+      const address = c?.address || '（住所未登録）';
+      const tel = c?.phoneNumber || c?.mobilePhoneNumber || '（電話番号未登録）';
+
+      body += `【${t.reason}】\n`;
+      body += `氏名: ${fullName}\n`;
+      body += `スマレジID: ${t.smaregiId}\n`;
+      body += `住所: ${zip} ${address}\n`;
+      body += `電話: ${tel}\n`;
+      body += `基準日: ${t.refDate}\n`;
+      body += '-'.repeat(40) + '\n\n';
+
+      db.saveDmReminder(t.memberId, t.type, t.refDate);
+      console.log(`[DM Reminder] 対象追加: ${fullName} (${t.reason})`);
+    }
+
+    await sendDmReminder(
+      `【紙DM送付リマインド】本日の対象者 ${targets.length}名 (${today})`,
+      body
+    );
+
+    console.log(`[DM Reminder] まとめメール送信完了 ${targets.length}名`);
+    console.log('[DM Reminder] チェック完了');
+  });
+
+  console.log('[Scheduler] 紙DMリマインド起動（毎日8:00に実行）');
 }
 
 module.exports = { startScheduler };
