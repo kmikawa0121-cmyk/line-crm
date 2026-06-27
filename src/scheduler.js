@@ -267,38 +267,27 @@ function startScheduler() {
       }
     }
 
-    // メール本文を組み立て
+    // DB保存 & メール送信
     const today = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    let body = `${today} 紙DM送付リマインド（${targets.length}名）\n`;
-    body += '='.repeat(50) + '\n\n';
+    const dateStr = today.replace(/\//g, '-');
 
     for (const t of targets) {
-      const c = t.customer;
-      const fullName = c ? [c.lastName, c.firstName].filter(Boolean).join(' ') || t.name : t.name;
-      const zip = c?.zipCode ? `〒${c.zipCode}` : '';
-      const address = c?.address || '（住所未登録）';
-      const tel = c?.phoneNumber || c?.mobilePhoneNumber || '（電話番号未登録）';
-
-      const productsText = t.products && t.products.length > 0
-        ? t.products.map(p => `  ・${p.name}　¥${p.price.toLocaleString()} × ${p.qty}`).join('\n')
-        : '  （商品情報なし）';
-
-      body += `【${t.reason}】\n`;
-      body += `氏名: ${fullName}\n`;
-      body += `スマレジID: ${t.smaregiId}\n`;
-      body += `住所: ${zip} ${address}\n`;
-      body += `電話: ${tel}\n`;
-      body += `基準日: ${t.refDate}\n`;
-      body += `購入商品:\n${productsText}\n`;
-      body += '-'.repeat(40) + '\n\n';
-
       db.saveDmReminder(t.memberId, t.type, t.refDate);
-      console.log(`[DM Reminder] 対象追加: ${fullName} (${t.reason})`);
+      console.log(`[DM Reminder] 対象: ${t.name} (${t.reason})`);
     }
+
+    const body = `${today} 紙DM送付リマインド（${targets.length}名）\n\n添付のCSVファイルをご確認ください。\n\n対象者:\n` +
+      targets.map(t => {
+        const c = t.customer;
+        const fullName = c ? [c.lastName, c.firstName].filter(Boolean).join(' ') || t.name : t.name;
+        return `  ・${fullName}（${t.reason}）`;
+      }).join('\n');
 
     await sendDmReminder(
       `【紙DM送付リマインド】本日の対象者 ${targets.length}名 (${today})`,
-      body
+      body,
+      targets,
+      dateStr
     );
 
     console.log(`[DM Reminder] まとめメール送信完了 ${targets.length}名`);
