@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const db = require('./db');
 const { getClient } = require('./line/handler');
 const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage, getBirthdayMessages } = require('./line/messages');
-const { getPurchaseHistory, getCustomerById } = require('./smaregi/api');
+const { getPurchaseHistory, getCustomerById, getTransactionDetails } = require('./smaregi/api');
 const { sendDmReminder } = require('./email');
 
 /**
@@ -217,7 +217,7 @@ function startScheduler() {
             (Date.now() - new Date(firstDate).getTime()) / (1000 * 60 * 60 * 24)
           );
           if (daysSince >= 3 && daysSince < 6 && !db.hasDmReminder(member.id, 'first_3day', firstDate)) {
-            targets.push({ name, smaregiId: member.smaregi_customer_id, reason: '初回購入から3日', refDate: firstDate, type: 'first_3day', memberId: member.id });
+            targets.push({ name, smaregiId: member.smaregi_customer_id, reason: '初回購入から3日', refDate: firstDate, type: 'first_3day', memberId: member.id, transactionId: firstPurchase.transaction_id });
           }
         }
       } catch (err) {
@@ -235,7 +235,7 @@ function startScheduler() {
         );
         for (const { days, type, label } of [{ days: 30, type: '30day', label: '最終購入から30日' }, { days: 60, type: '60day', label: '最終購入から60日' }]) {
           if (daysSince >= days && daysSince < days + 3 && !db.hasDmReminder(member.id, type, lastDate)) {
-            targets.push({ name, smaregiId: member.smaregi_customer_id, reason: label, refDate: lastDate, type, memberId: member.id });
+            targets.push({ name, smaregiId: member.smaregi_customer_id, reason: label, refDate: lastDate, type, memberId: member.id, transactionId: transactions[0].transactionHeadId || transactions[0].id });
           }
         }
       } catch (err) {
@@ -248,13 +248,22 @@ function startScheduler() {
       return;
     }
 
-    // スマレジから住所・電話番号を取得
+    // スマレジから住所・電話番号・購入商品を取得
     for (const t of targets) {
       try {
-        const customer = await getCustomerById(t.smaregiId);
+        const [customer, details] = await Promise.all([
+          getCustomerById(t.smaregiId),
+          t.transactionId ? getTransactionDetails(t.transactionId).catch(() => []) : Promise.resolve([]),
+        ]);
         t.customer = customer;
+        t.products = details.map(d => ({
+          name: d.productName || d.productCode || '商品',
+          price: Number(d.price ?? 0),
+          qty: Number(d.quantity ?? 1),
+        }));
       } catch (_) {
         t.customer = null;
+        t.products = [];
       }
     }
 
@@ -270,12 +279,17 @@ function startScheduler() {
       const address = c?.address || '（住所未登録）';
       const tel = c?.phoneNumber || c?.mobilePhoneNumber || '（電話番号未登録）';
 
+      const productsText = t.products && t.products.length > 0
+        ? t.products.map(p => `  ・${p.name}　¥${p.price.toLocaleString()} × ${p.qty}`).join('\n')
+        : '  （商品情報なし）';
+
       body += `【${t.reason}】\n`;
       body += `氏名: ${fullName}\n`;
       body += `スマレジID: ${t.smaregiId}\n`;
       body += `住所: ${zip} ${address}\n`;
       body += `電話: ${tel}\n`;
       body += `基準日: ${t.refDate}\n`;
+      body += `購入商品:\n${productsText}\n`;
       body += '-'.repeat(40) + '\n\n';
 
       db.saveDmReminder(t.memberId, t.type, t.refDate);
