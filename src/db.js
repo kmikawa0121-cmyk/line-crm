@@ -19,6 +19,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     line_user_id TEXT UNIQUE NOT NULL,
     smaregi_customer_id TEXT UNIQUE,
+    customer_code TEXT,
     display_name TEXT,
     registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -89,10 +90,17 @@ function createMember(lineUserId, displayName) {
   ).run(lineUserId, displayName);
 }
 
-function linkMember(lineUserId, smaregiCustomerId) {
+function linkMember(lineUserId, smaregiCustomerId, customerCode) {
   return db.prepare(
-    'UPDATE members SET smaregi_customer_id = ? WHERE line_user_id = ?'
-  ).run(smaregiCustomerId, lineUserId);
+    'UPDATE members SET smaregi_customer_id = ?, customer_code = ? WHERE line_user_id = ?'
+  ).run(smaregiCustomerId, customerCode || null, lineUserId);
+}
+
+// 既存会員の customer_code を更新（マイグレーション用）
+try {
+  db.exec('ALTER TABLE members ADD COLUMN customer_code TEXT');
+} catch (_) {
+  // 列が既に存在する場合は無視
 }
 
 // --- purchases ---

@@ -155,6 +155,92 @@
     color: #bbb;
     font-size: 13px;
   }
+
+  /* LINE配信セクション */
+  .broadcast-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .broadcast-section .table-header { border-bottom: 1px solid #f0ebe4; }
+
+  .ig-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 16px;
+  }
+  .ig-thumb {
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .ig-thumb.selected { border-color: #c8960c; }
+
+  .broadcast-form {
+    padding: 16px 24px 24px;
+    border-top: 1px solid #f0ebe4;
+  }
+  .broadcast-form label {
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .broadcast-form textarea {
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid #e8e0d6;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #2c2c2c;
+    resize: vertical;
+    margin-bottom: 12px;
+  }
+  .broadcast-form textarea:focus { outline: none; border-color: #c8960c; }
+
+  .broadcast-meta {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 12px;
+  }
+  .btn-broadcast {
+    background: #2c2c2c;
+    color: #c8960c;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    letter-spacing: 1px;
+    cursor: pointer;
+  }
+  .btn-broadcast:hover { background: #3d3d3d; }
+  .btn-broadcast:disabled { background: #ccc; color: #fff; cursor: not-allowed; }
+  .broadcast-result {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #2c2c2c;
+  }
+  .ig-load-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 12px 16px 0;
+    color: #666;
+  }
+  .ig-load-btn:hover { border-color: #c8960c; color: #c8960c; }
 </style>
 </head>
 <body>
@@ -177,6 +263,28 @@
     </div>
   </div>
 
+  <!-- LINE一斉配信セクション -->
+  <div class="broadcast-section">
+    <div class="table-header">
+      <h2>LINE 一斉配信</h2>
+      <button class="ig-load-btn" id="igLoadBtn" onclick="loadInstagram()">Instagramから最新投稿を読み込む</button>
+    </div>
+
+    <div id="igGrid" class="ig-grid" style="display:none;"></div>
+    <div id="igEmpty" style="padding:16px 24px; font-size:12px; color:#aaa; display:none;">投稿が取得できませんでした</div>
+
+    <div class="broadcast-form">
+      <label>配信メッセージ</label>
+      <textarea id="broadcastText" placeholder="LINEで送るメッセージを入力してください&#10;（Instagramの投稿を選ぶと自動でセットされます）"></textarea>
+      <div id="selectedPostPreview" style="display:none; margin-bottom:12px; font-size:12px; color:#888; padding:8px 12px; background:#faf7f3; border-radius:6px; border-left:3px solid #c8960c;">
+        📷 Instagram投稿を添付中（画像URLをテキストに含めます）
+      </div>
+      <div class="broadcast-meta" id="broadcastMeta">送信先: 読み込み中...</div>
+      <button class="btn-broadcast" id="broadcastBtn" onclick="sendBroadcast()">LINE に一斉送信</button>
+      <div class="broadcast-result" id="broadcastResult"></div>
+    </div>
+  </div>
+
   <div class="table-section">
     <div class="table-header">
       <h2>連携済み会員一覧</h2>
@@ -186,12 +294,13 @@
       <thead>
         <tr>
           <th>LINE名</th>
+          <th>会員番号</th>
           <th>スマレジ顧客ID</th>
           <th>連携日時</th>
         </tr>
       </thead>
       <tbody id="memberList">
-        <tr><td colspan="3" class="loading">読み込み中...</td></tr>
+        <tr><td colspan="4" class="loading">読み込み中...</td></tr>
       </tbody>
     </table>
   </div>
@@ -209,7 +318,7 @@
       const tbody = document.getElementById('memberList');
 
       if (members.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty">連携済み会員がいません</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">連携済み会員がいません</td></tr>';
         return;
       }
 
@@ -226,21 +335,147 @@
           ? new Date(m.registered_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
           : '—';
         const name = m.display_name || `<span class="badge">名前未取得</span>`;
+        const code = m.customer_code || `<span class="badge">未取得</span>`;
         return `
           <tr>
             <td>${name}</td>
-            <td>${m.smaregi_customer_id || '—'}</td>
+            <td>${code}</td>
+            <td style="color:#999; font-size:12px;">${m.smaregi_customer_id || '—'}</td>
             <td style="color:#999; font-size:12px;">${date}</td>
           </tr>
         `;
       }).join('');
     } catch (err) {
       document.getElementById('memberList').innerHTML =
-        '<tr><td colspan="3" class="empty">データの取得に失敗しました</td></tr>';
+        '<tr><td colspan="4" class="empty">データの取得に失敗しました</td></tr>';
     }
   }
 
   loadMembers();
+
+  // --- Instagram + LINE broadcast ---
+
+  let selectedPost = null;
+
+  async function loadMemberCount() {
+    try {
+      const res = await fetch('/admin/api/members');
+      const members = await res.json();
+      const linked = members.filter(m => m.line_user_id);
+      document.getElementById('broadcastMeta').textContent = `送信先: ${linked.length} 名`;
+    } catch (e) {
+      document.getElementById('broadcastMeta').textContent = '送信先: 取得失敗';
+    }
+  }
+  loadMemberCount();
+
+  async function loadInstagram() {
+    const btn = document.getElementById('igLoadBtn');
+    btn.textContent = '読み込み中...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/admin/api/instagram/latest');
+      const data = await res.json();
+
+      const empty = document.getElementById('igEmpty');
+      const grid = document.getElementById('igGrid');
+
+      if (!res.ok || !data.data || data.data.length === 0) {
+        empty.textContent = data.error || '投稿が取得できませんでした';
+        empty.style.display = 'block';
+        grid.style.display = 'none';
+        btn.textContent = '再読み込み';
+        btn.disabled = false;
+        return;
+      }
+
+      const posts = data.data;
+      grid.innerHTML = posts.map((p, i) => {
+        const imgSrc = p.media_type === 'VIDEO' ? (p.thumbnail_url || '') : (p.media_url || '');
+        if (!imgSrc) return '';
+        const caption = (p.caption || '').replace(/"/g, '&quot;').slice(0, 300);
+        return `<img class="ig-thumb" src="${imgSrc}" alt=""
+          onclick="selectPost(${i})" data-index="${i}"
+          data-permalink="${p.permalink || ''}"
+          data-caption="${caption}" />`;
+      }).join('');
+
+      grid.style.display = 'grid';
+      empty.style.display = 'none';
+
+    } catch (e) {
+      const empty = document.getElementById('igEmpty');
+      empty.textContent = 'Instagram取得失敗: ' + (e.message || '不明なエラー');
+      empty.style.display = 'block';
+    }
+
+    btn.textContent = '再読み込み';
+    btn.disabled = false;
+  }
+
+  function selectPost(index) {
+    const thumbs = document.querySelectorAll('.ig-thumb');
+    const preview = document.getElementById('selectedPostPreview');
+    thumbs.forEach((t, i) => {
+      if (i === index) {
+        if (t.classList.contains('selected')) {
+          // 選択解除
+          t.classList.remove('selected');
+          selectedPost = null;
+          preview.style.display = 'none';
+          document.getElementById('broadcastText').value = '';
+        } else {
+          t.classList.add('selected');
+          selectedPost = { permalink: t.dataset.permalink, caption: t.dataset.caption };
+          preview.style.display = 'block';
+          // キャプション＋URLをテキストにセット
+          const caption = t.dataset.caption || '';
+          const permalink = t.dataset.permalink || '';
+          document.getElementById('broadcastText').value =
+            (caption ? caption + '\n\n' : '') + permalink;
+        }
+      } else {
+        t.classList.remove('selected');
+      }
+    });
+  }
+
+  async function sendBroadcast() {
+    const text = document.getElementById('broadcastText').value.trim();
+    if (!text) { alert('メッセージを入力してください'); return; }
+
+    const btn = document.getElementById('broadcastBtn');
+    const resultEl = document.getElementById('broadcastResult');
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+    resultEl.textContent = '';
+
+    // LINEのimage messageはInstagramのCDN URLを取得できないためテキストのみ送信
+    const messages = [{ type: 'text', text }];
+
+    try {
+      const res = await fetch('/admin/api/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        resultEl.textContent = `✓ ${data.sent} 名に送信しました`;
+        resultEl.style.color = '#2a7a2a';
+      } else {
+        resultEl.textContent = 'エラー: ' + (data.error || '送信失敗');
+        resultEl.style.color = '#c0392b';
+      }
+    } catch (e) {
+      resultEl.textContent = '通信エラー: ' + e.message;
+      resultEl.style.color = '#c0392b';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'LINE に一斉送信';
+  }
 </script>
 </body>
 </html>

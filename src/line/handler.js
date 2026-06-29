@@ -93,9 +93,9 @@ async function handleMemberCodeInput(lineUserId, memberCode) {
   // 会員情報を取得してLINEと紐付け
   const profile = await getClient().getProfile(lineUserId);
   db.createMember(lineUserId, profile.displayName);
-  db.linkMember(lineUserId, String(customer.customerId));
+  db.linkMember(lineUserId, String(customer.customerId), String(customer.customerCode || ''));
 
-  console.log(`[LINE] 紐付け完了: LINE=${lineUserId} ← スマレジ顧客ID=${customer.customerId}`);
+  console.log(`[LINE] 紐付け完了: LINE=${lineUserId} ← スマレジ顧客ID=${customer.customerId} 会員番号=${customer.customerCode}`);
 
   await getClient().pushMessage({
     to: lineUserId,
