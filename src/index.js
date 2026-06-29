@@ -9,6 +9,8 @@ const { handleSmaregiWebhook } = require('./smaregi/webhook');
 const { startScheduler } = require('./scheduler');
 const liffRoutes = require('./liff/routes');
 const { router: adminRouter } = require('./admin/routes');
+const db = require('./db');
+const { getCustomerById } = require('./smaregi/api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,9 +48,28 @@ app.use(express.static(path.join(__dirname, '../public')));
 // ヘルスチェック
 app.get('/', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
+async function backfillCustomerInfo() {
+  const members = db.getMembersWithoutCustomerInfo();
+  if (members.length === 0) return;
+  console.log(`[Backfill] 会員情報を補完中... ${members.length}名`);
+  for (const m of members) {
+    try {
+      const customer = await getCustomerById(m.smaregi_customer_id);
+      const name = [customer.lastName, customer.firstName].filter(Boolean).join(' ');
+      const code = customer.customerCode ? String(customer.customerCode) : null;
+      db.updateCustomerInfo(m.id, name || null, code);
+      console.log(`[Backfill] 補完: ${name} (会員番号:${code})`);
+    } catch (err) {
+      console.error(`[Backfill] エラー member_id=${m.id}:`, err.message);
+    }
+  }
+  console.log('[Backfill] 完了');
+}
+
 // --- 起動 ---
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`サーバー起動: PORT=${PORT}`);
   initLineClient();
   startScheduler();
+  backfillCustomerInfo();
 });

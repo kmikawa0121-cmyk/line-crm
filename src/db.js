@@ -167,6 +167,18 @@ function getAllLinkedMembers() {
   ).all();
 }
 
+function getMembersWithoutCustomerInfo() {
+  return db.prepare(
+    'SELECT * FROM members WHERE smaregi_customer_id IS NOT NULL AND (customer_name IS NULL OR customer_code IS NULL)'
+  ).all();
+}
+
+function updateCustomerInfo(memberId, customerName, customerCode) {
+  return db.prepare(
+    'UPDATE members SET customer_name = ?, customer_code = ? WHERE id = ?'
+  ).run(customerName || null, customerCode || null, memberId);
+}
+
 function hasReorderReminder(memberId, reminderType, lastPurchaseDate) {
   const row = db.prepare(
     'SELECT id FROM reorder_reminders WHERE member_id = ? AND reminder_type = ? AND last_purchase_date = ?'
@@ -221,4 +233,6 @@ module.exports = {
   hasDmReminder,
   saveDmReminder,
   getFirstPurchase,
+  getMembersWithoutCustomerInfo,
+  updateCustomerInfo,
 };
