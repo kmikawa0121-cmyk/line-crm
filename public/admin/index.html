@@ -293,6 +293,7 @@
     <table>
       <thead>
         <tr>
+          <th>会員名</th>
           <th>LINE名</th>
           <th>会員番号</th>
           <th>スマレジ顧客ID</th>
@@ -300,7 +301,7 @@
         </tr>
       </thead>
       <tbody id="memberList">
-        <tr><td colspan="4" class="loading">読み込み中...</td></tr>
+        <tr><td colspan="5" class="loading">読み込み中...</td></tr>
       </tbody>
     </table>
   </div>
@@ -318,7 +319,7 @@
       const tbody = document.getElementById('memberList');
 
       if (members.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty">連携済み会員がいません</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">連携済み会員がいません</td></tr>';
         return;
       }
 
@@ -334,11 +335,13 @@
         const date = m.registered_at
           ? new Date(m.registered_at.replace(' ', 'T') + 'Z').toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
           : '—';
-        const name = m.display_name || `<span class="badge">名前未取得</span>`;
+        const lineName = m.display_name || `<span class="badge">名前未取得</span>`;
+        const customerName = m.customer_name || `<span class="badge">未取得</span>`;
         const code = m.customer_code || `<span class="badge">未取得</span>`;
         return `
           <tr>
-            <td>${name}</td>
+            <td>${customerName}</td>
+            <td>${lineName}</td>
             <td>${code}</td>
             <td style="color:#999; font-size:12px;">${m.smaregi_customer_id || '—'}</td>
             <td style="color:#999; font-size:12px;">${date}</td>
@@ -347,7 +350,7 @@
       }).join('');
     } catch (err) {
       document.getElementById('memberList').innerHTML =
-        '<tr><td colspan="4" class="empty">データの取得に失敗しました</td></tr>';
+        '<tr><td colspan="5" class="empty">データの取得に失敗しました</td></tr>';
     }
   }
 

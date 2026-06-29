@@ -90,17 +90,15 @@ function createMember(lineUserId, displayName) {
   ).run(lineUserId, displayName);
 }
 
-function linkMember(lineUserId, smaregiCustomerId, customerCode) {
+function linkMember(lineUserId, smaregiCustomerId, customerCode, customerName) {
   return db.prepare(
-    'UPDATE members SET smaregi_customer_id = ?, customer_code = ? WHERE line_user_id = ?'
-  ).run(smaregiCustomerId, customerCode || null, lineUserId);
+    'UPDATE members SET smaregi_customer_id = ?, customer_code = ?, customer_name = ? WHERE line_user_id = ?'
+  ).run(smaregiCustomerId, customerCode || null, customerName || null, lineUserId);
 }
 
-// 既存会員の customer_code を更新（マイグレーション用）
-try {
-  db.exec('ALTER TABLE members ADD COLUMN customer_code TEXT');
-} catch (_) {
-  // 列が既に存在する場合は無視
+// 既存DBへの列追加（マイグレーション）
+for (const col of ['customer_code TEXT', 'customer_name TEXT']) {
+  try { db.exec(`ALTER TABLE members ADD COLUMN ${col}`); } catch (_) {}
 }
 
 // --- purchases ---
