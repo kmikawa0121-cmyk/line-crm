@@ -58,7 +58,7 @@ function startScheduler() {
   console.log('[Scheduler] スケジューラー起動（毎時0分に実行）');
 
   // 毎日朝10時に補充リマインドチェック
-  cron.schedule('0 10 * * *', async () => {
+  cron.schedule('0 1 * * *', async () => {
     console.log('[Reorder] 補充リマインドチェック開始...');
     const members = db.getAllLinkedMembers();
 
@@ -115,7 +115,7 @@ function startScheduler() {
   console.log('[Scheduler] 補充リマインド起動（毎日10:00に実行）');
 
   // 毎日朝11時に長期未来店チェック
-  cron.schedule('0 11 * * *', async () => {
+  cron.schedule('0 2 * * *', async () => {
     console.log('[Absence] 長期未来店チェック開始...');
     const members = db.getAllLinkedMembers();
 
@@ -166,7 +166,7 @@ function startScheduler() {
   console.log('[Scheduler] 長期未来店リマインド起動（毎日11:00に実行）');
 
   // 毎月1日朝9時に誕生月チェック
-  cron.schedule('0 9 1 * *', async () => {
+  cron.schedule('0 0 1 * *', async () => {
     console.log('[Birthday] 誕生月チェック開始...');
     const members = db.getAllLinkedMembers();
     const today = new Date();
@@ -207,8 +207,8 @@ function startScheduler() {
 
   console.log('[Scheduler] 誕生日メッセージ起動（毎日9:00に実行）');
 
-  // 毎日朝8時に紙DM送付リマインドチェック（日曜・祝日はスキップ）
-  cron.schedule('0 8 * * *', async () => {
+  // 毎日朝8時JST（UTC 23時）に紙DM送付リマインドチェック（日曜・祝日はスキップ）
+  cron.schedule('0 23 * * *', async () => {
     if (!isBusinessDay(new Date())) {
       console.log('[DM Reminder] 日曜日または祝日のためスキップ');
       return;
