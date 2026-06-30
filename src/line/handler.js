@@ -27,8 +27,12 @@ function getClient() {
 async function handleLineWebhook(req, res) {
   const events = req.body.events || [];
 
-  await Promise.all(events.map(handleEvent));
+  // LINEは200が返らないと再送するため、即座に返してから処理する
   res.sendStatus(200);
+
+  Promise.all(events.map(handleEvent)).catch(err => {
+    console.error('[LINE Webhook] 処理エラー:', err);
+  });
 }
 
 async function handleEvent(event) {
