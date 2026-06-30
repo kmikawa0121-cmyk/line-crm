@@ -98,6 +98,9 @@ async function handleMemberCodeInput(lineUserId, memberCode) {
 
   console.log(`[LINE] 紐付け完了: LINE=${lineUserId} ← スマレジ顧客ID=${customer.customerId} 会員番号=${customer.customerCode} 氏名=${customerName}`);
 
+  // レート制限対策で1秒待機してから送信
+  await new Promise(r => setTimeout(r, 1000));
+
   await getClient().pushMessage({
     to: lineUserId,
     messages: [getLinkSuccessMessage(profile.displayName)],
