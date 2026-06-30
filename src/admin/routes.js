@@ -4,6 +4,7 @@ const axios = require('axios');
 const router = express.Router();
 const db = require('../db');
 const { getClient } = require('../line/handler');
+const { getCustomerById } = require('../smaregi/api');
 
 // 簡易パスワード認証ミドルウェア
 function requireAuth(req, res, next) {
@@ -41,6 +42,24 @@ router.get('/', requireAuth, (req, res) => {
 router.get('/api/members', requireAuth, (req, res) => {
   const members = db.getAllLinkedMembers();
   res.json(members);
+});
+
+// スマレジから会員情報を再同期
+router.post('/api/members/sync', requireAuth, async (req, res) => {
+  const members = db.getAllLinkedMembers();
+  let updated = 0;
+  for (const m of members) {
+    try {
+      const customer = await getCustomerById(m.smaregi_customer_id);
+      const name = [customer.lastName, customer.firstName].filter(Boolean).join(' ');
+      const code = customer.customerCode ? String(customer.customerCode) : null;
+      db.updateCustomerInfo(m.id, name || null, code);
+      updated++;
+    } catch (err) {
+      console.error(`[Sync] エラー member_id=${m.id}:`, err.message);
+    }
+  }
+  res.json({ updated, total: members.length });
 });
 
 // CSVダウンロード

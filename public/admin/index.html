@@ -288,7 +288,10 @@
   <div class="table-section">
     <div class="table-header">
       <h2>連携済み会員一覧</h2>
-      <a href="/admin/api/members/csv" class="btn-csv">CSVダウンロード</a>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="ig-load-btn" id="syncBtn" onclick="syncMembers()" style="margin:0;">スマレジと同期</button>
+        <a href="/admin/api/members/csv" class="btn-csv">CSVダウンロード</a>
+      </div>
     </div>
     <table>
       <thead>
@@ -355,6 +358,22 @@
   }
 
   loadMembers();
+
+  async function syncMembers() {
+    const btn = document.getElementById('syncBtn');
+    btn.textContent = '同期中...';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/admin/api/members/sync', { method: 'POST' });
+      const data = await res.json();
+      alert(`同期完了: ${data.updated}名更新しました`);
+      loadMembers();
+    } catch (e) {
+      alert('同期に失敗しました');
+    }
+    btn.textContent = 'スマレジと同期';
+    btn.disabled = false;
+  }
 
   // --- Instagram + LINE broadcast ---
 
