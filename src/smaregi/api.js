@@ -108,7 +108,7 @@ async function getPurchaseHistory(customerId) {
     const fromDate = new Date(toDate);
     fromDate.setDate(fromDate.getDate() - 30);
 
-    const fmt = (d) => d.toISOString().replace(/\.\d{3}Z$/, '+00:00');
+    const fmt = (d) => d.toISOString().slice(0, 19) + 'Z';
 
     try {
       const response = await axios.get(
