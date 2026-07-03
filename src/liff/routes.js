@@ -26,6 +26,7 @@ router.get('/member', async (req, res) => {
       point: point,
       rank: customer.memberRank?.memberRankName ?? null,
       customerCode: customer.customerCode ?? null,
+      birthday: customer.birthday ?? null,
     });
   } catch (err) {
     console.error('[LIFF /member Error]', err.message);

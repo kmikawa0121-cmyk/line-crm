@@ -267,6 +267,11 @@
       <span class="point-num" id="point-value">0</span>
       <span class="point-unit">pt</span>
     </div>
+    <div class="gold-line"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-size:10px; letter-spacing:0.2em; color:rgba(242,237,230,0.6);">BIRTHDAY MONTH</div>
+      <div style="font-size:13px; color:#f2ede6; letter-spacing:0.05em;" id="birthday-value">-</div>
+    </div>
     <div style="font-size:11px; color:rgba(242,237,230,0.7); text-align:center; margin-top:10px; line-height:1.6; letter-spacing:0.03em;">※2年間当店でのご利用が無い場合､<br>ポイントが失効致しますのでご注意ください</div>
   </div>
 
@@ -320,6 +325,14 @@
 
       document.getElementById('point-value').textContent = member.point.toLocaleString();
       document.getElementById('user-name').textContent = member.displayName + ' 様';
+
+      const birthdayEl = document.getElementById('birthday-value');
+      if (member.birthday) {
+        const month = parseInt(member.birthday.slice(-5, -3), 10);
+        birthdayEl.textContent = month + '月';
+      } else {
+        birthdayEl.textContent = '未登録';
+      }
 
       if (member.customerCode) {
         JsBarcode('#barcode-svg', member.customerCode, {
