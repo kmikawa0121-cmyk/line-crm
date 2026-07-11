@@ -37,13 +37,14 @@ async function handleLineWebhook(req, res) {
 
 async function handleEvent(event) {
   const lineUserId = event.source.userId;
+  const replyToken = event.replyToken;
 
   try {
     if (event.type === 'follow') {
       // 友だち追加 → 会員番号の入力を促す
       await ensureMember(lineUserId);
-      await getClient().pushMessage({
-        to: lineUserId,
+      await getClient().replyMessage({
+        replyToken,
         messages: [getWelcomeMessage()],
       });
       return;
@@ -57,7 +58,7 @@ async function handleEvent(event) {
       // 相談など文字を含むメッセージはスタッフが手動対応できるよう無視する
       if (!member || !member.smaregi_customer_id) {
         if (/^\d+$/.test(text)) {
-          await handleMemberCodeInput(lineUserId, text);
+          await handleMemberCodeInput(lineUserId, text, replyToken);
         }
         return;
       }
@@ -72,23 +73,23 @@ async function handleEvent(event) {
 /**
  * 会員番号入力の処理
  */
-async function handleMemberCodeInput(lineUserId, memberCode) {
+async function handleMemberCodeInput(lineUserId, memberCode, replyToken) {
   let customer;
 
   try {
     customer = await findCustomerByMemberCode(memberCode);
   } catch (err) {
     console.error('[Smaregi API Error]', err.message);
-    await getClient().pushMessage({
-      to: lineUserId,
+    await getClient().replyMessage({
+      replyToken,
       messages: [{ type: 'text', text: 'エラーが発生しました。しばらくしてからお試しください。' }],
     });
     return;
   }
 
   if (!customer) {
-    await getClient().pushMessage({
-      to: lineUserId,
+    await getClient().replyMessage({
+      replyToken,
       messages: [getLinkFailMessage()],
     });
     return;
@@ -102,7 +103,11 @@ async function handleMemberCodeInput(lineUserId, memberCode) {
 
   console.log(`[LINE] 紐付け完了: LINE=${lineUserId} ← スマレジ顧客ID=${customer.customerId} 会員番号=${customer.customerCode} 氏名=${customerName}`);
 
-  await pushMessageWithRetry(lineUserId, [getLinkSuccessMessage(profile.displayName)]);
+  await getClient().replyMessage({
+    replyToken,
+    messages: [getLinkSuccessMessage(profile.displayName)],
+  });
+  console.log(`[LINE] 連携完了メッセージ送信: ${lineUserId}`);
 }
 
 // 429時に最大3回リトライ（2秒→4秒→6秒待機）
