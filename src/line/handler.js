@@ -102,13 +102,28 @@ async function handleMemberCodeInput(lineUserId, memberCode) {
 
   console.log(`[LINE] 紐付け完了: LINE=${lineUserId} ← スマレジ顧客ID=${customer.customerId} 会員番号=${customer.customerCode} 氏名=${customerName}`);
 
-  // レート制限対策で1秒待機してから送信
-  await new Promise(r => setTimeout(r, 1000));
+  await pushMessageWithRetry(lineUserId, [getLinkSuccessMessage(profile.displayName)]);
+}
 
-  await getClient().pushMessage({
-    to: lineUserId,
-    messages: [getLinkSuccessMessage(profile.displayName)],
-  });
+// 429時に最大3回リトライ（2秒→4秒→6秒待機）
+async function pushMessageWithRetry(to, messages, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await getClient().pushMessage({ to, messages });
+      console.log(`[LINE] pushMessage成功: ${to}`);
+      return;
+    } catch (err) {
+      const status = err.status ?? err.statusCode ?? err.response?.status;
+      console.error(`[LINE] pushMessage失敗 (試行${i + 1}/${maxRetries}): status=${status} ${err.message}`);
+      if (status === 429 && i < maxRetries - 1) {
+        const wait = (i + 1) * 2000;
+        console.log(`[LINE] ${wait / 1000}秒後にリトライ...`);
+        await new Promise(r => setTimeout(r, wait));
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 /**
