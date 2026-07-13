@@ -176,10 +176,10 @@ function startScheduler() {
     for (const member of members) {
       try {
         const customer = await getCustomerById(member.smaregi_customer_id);
-        if (!customer?.birthday) continue;
+        if (!customer?.birthDate) continue;
 
         // スマレジの誕生日フォーマット: YYYY-MM-DD or MM-DD
-        const birthMonth = customer.birthday.slice(-5, -3); // MM を取り出す
+        const birthMonth = customer.birthDate.slice(-5, -3); // MM を取り出す
 
         if (birthMonth !== thisMonth) continue;
         if (db.hasBirthdayMessage(member.id, thisYear)) continue;

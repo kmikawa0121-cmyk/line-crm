@@ -63,7 +63,7 @@ async function backfillCustomerInfo() {
       }
       const name = [customer.lastName, customer.firstName].filter(Boolean).join(' ');
       const code = customer.customerCode ? String(customer.customerCode) : null;
-      const birthday = customer.birthday || null;
+      const birthday = customer.birthDate || null;
       db.updateCustomerInfo(m.id, name || null, code, birthday);
       console.log(`[Backfill] 補完: ${name} (会員番号:${code}) 誕生日:${birthday || '未登録'}`);
     } catch (err) {
