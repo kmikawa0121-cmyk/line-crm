@@ -57,7 +57,8 @@ async function backfillCustomerInfo() {
       const customer = await getCustomerById(m.smaregi_customer_id);
       const name = [customer.lastName, customer.firstName].filter(Boolean).join(' ');
       const code = customer.customerCode ? String(customer.customerCode) : null;
-      db.updateCustomerInfo(m.id, name || null, code);
+      const birthday = customer.birthday || null;
+      db.updateCustomerInfo(m.id, name || null, code, birthday);
       console.log(`[Backfill] 補完: ${name} (会員番号:${code})`);
     } catch (err) {
       console.error(`[Backfill] エラー member_id=${m.id}:`, err.message);

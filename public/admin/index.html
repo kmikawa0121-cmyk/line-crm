@@ -299,6 +299,7 @@
           <th>会員名</th>
           <th>LINE名</th>
           <th>会員番号</th>
+          <th>誕生月</th>
           <th>スマレジ顧客ID</th>
           <th>連携日時</th>
         </tr>
@@ -341,11 +342,17 @@
         const lineName = m.display_name || `<span class="badge">名前未取得</span>`;
         const customerName = m.customer_name || `<span class="badge">未取得</span>`;
         const code = m.customer_code || `<span class="badge">未取得</span>`;
+        let birthdayStr = `<span class="badge">未登録</span>`;
+        if (m.birthday) {
+          const month = parseInt(m.birthday.slice(-5, -3), 10);
+          birthdayStr = `${month}月`;
+        }
         return `
           <tr>
             <td>${customerName}</td>
             <td>${lineName}</td>
             <td>${code}</td>
+            <td>${birthdayStr}</td>
             <td style="color:#999; font-size:12px;">${m.smaregi_customer_id || '—'}</td>
             <td style="color:#999; font-size:12px;">${date}</td>
           </tr>

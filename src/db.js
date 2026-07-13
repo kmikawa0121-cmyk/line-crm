@@ -97,7 +97,7 @@ function linkMember(lineUserId, smaregiCustomerId, customerCode, customerName) {
 }
 
 // 既存DBへの列追加（マイグレーション）
-for (const col of ['customer_code TEXT', 'customer_name TEXT']) {
+for (const col of ['customer_code TEXT', 'customer_name TEXT', 'birthday TEXT']) {
   try { db.exec(`ALTER TABLE members ADD COLUMN ${col}`); } catch (_) {}
 }
 
@@ -173,10 +173,10 @@ function getMembersWithoutCustomerInfo() {
   ).all();
 }
 
-function updateCustomerInfo(memberId, customerName, customerCode) {
+function updateCustomerInfo(memberId, customerName, customerCode, birthday) {
   return db.prepare(
-    'UPDATE members SET customer_name = ?, customer_code = ? WHERE id = ?'
-  ).run(customerName || null, customerCode || null, memberId);
+    'UPDATE members SET customer_name = ?, customer_code = ?, birthday = ? WHERE id = ?'
+  ).run(customerName || null, customerCode || null, birthday || null, memberId);
 }
 
 function hasReorderReminder(memberId, reminderType, lastPurchaseDate) {

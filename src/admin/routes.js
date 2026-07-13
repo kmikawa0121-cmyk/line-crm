@@ -53,7 +53,8 @@ router.post('/api/members/sync', requireAuth, async (req, res) => {
       const customer = await getCustomerById(m.smaregi_customer_id);
       const name = [customer.lastName, customer.firstName].filter(Boolean).join(' ');
       const code = customer.customerCode ? String(customer.customerCode) : null;
-      db.updateCustomerInfo(m.id, name || null, code);
+      const birthday = customer.birthday || null;
+      db.updateCustomerInfo(m.id, name || null, code, birthday);
       updated++;
     } catch (err) {
       console.error(`[Sync] エラー member_id=${m.id}:`, err.message);
