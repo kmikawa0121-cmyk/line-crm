@@ -169,7 +169,7 @@ function getAllLinkedMembers() {
 
 function getMembersWithoutCustomerInfo() {
   return db.prepare(
-    'SELECT * FROM members WHERE smaregi_customer_id IS NOT NULL AND (customer_name IS NULL OR customer_code IS NULL)'
+    'SELECT * FROM members WHERE smaregi_customer_id IS NOT NULL AND (customer_name IS NULL OR customer_code IS NULL OR birthday IS NULL)'
   ).all();
 }
 
