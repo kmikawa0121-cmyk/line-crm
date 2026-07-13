@@ -52,9 +52,15 @@ async function backfillCustomerInfo() {
   const members = db.getMembersWithoutCustomerInfo();
   if (members.length === 0) return;
   console.log(`[Backfill] 会員情報を補完中... ${members.length}名`);
+  let firstDone = false;
   for (const m of members) {
     try {
       const customer = await getCustomerById(m.smaregi_customer_id);
+      // 最初の1件だけキー一覧をログ出力（フィールド名確認用）
+      if (!firstDone) {
+        console.log('[Backfill] スマレジ顧客フィールド一覧:', Object.keys(customer).join(', '));
+        firstDone = true;
+      }
       const name = [customer.lastName, customer.firstName].filter(Boolean).join(' ');
       const code = customer.customerCode ? String(customer.customerCode) : null;
       const birthday = customer.birthday || null;
