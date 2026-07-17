@@ -1,14 +1,9 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-function createTransporter() {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) throw new Error('GMAIL_USER または GMAIL_APP_PASSWORD が未設定です');
-
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass },
-  });
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY が未設定です');
+  return new Resend(apiKey);
 }
 
 /**
@@ -19,11 +14,12 @@ function createTransporter() {
  * @param {string} dateStr - ファイル名用の日付文字列
  */
 async function sendDmReminder(subject, body, targets = [], dateStr = '') {
-  const to = process.env.ADMIN_EMAIL || process.env.GMAIL_USER;
-  const transporter = createTransporter();
+  const resend = getResend();
+  const to = process.env.ADMIN_EMAIL;
+  if (!to) throw new Error('ADMIN_EMAIL が未設定です');
 
-  const mailOptions = {
-    from: `"美川漢方堂 CRM" <${process.env.GMAIL_USER}>`,
+  const emailOptions = {
+    from: '美川漢方堂 CRM <noreply@mikawakampodo.com>',
     to,
     subject,
     text: body,
@@ -32,16 +28,16 @@ async function sendDmReminder(subject, body, targets = [], dateStr = '') {
   if (targets.length > 0) {
     const csv = buildCsv(targets);
     const filename = `DM送付リスト_${dateStr || 'today'}.csv`;
-    mailOptions.attachments = [
+    emailOptions.attachments = [
       {
         filename,
-        content: '﻿' + csv, // BOM付き（Excel対応）
-        contentType: 'text/csv; charset=utf-8',
+        content: Buffer.from('﻿' + csv, 'utf-8'), // BOM付き（Excel対応）
+        contentType: 'text/csv',
       },
     ];
   }
 
-  await transporter.sendMail(mailOptions);
+  await resend.emails.send(emailOptions);
   console.log(`[Email] 送信完了: ${subject}`);
 }
 
