@@ -122,4 +122,21 @@ router.post('/api/broadcast', requireAuth, express.json(), async (req, res) => {
   res.json({ sent });
 });
 
+// メールテスト送信
+router.post('/api/test-email', requireAuth, express.json(), async (req, res) => {
+  const { sendDmReminder } = require('../email');
+  try {
+    await sendDmReminder(
+      '【テスト】美川漢方堂CRM メール送信テスト',
+      'このメールはテスト送信です。\nGmail設定が正常に動作しています。',
+      [],
+      'test'
+    );
+    res.json({ success: true, message: 'テストメールを送信しました' });
+  } catch (err) {
+    console.error('[Test Email Error]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = { router, requireAuth };
