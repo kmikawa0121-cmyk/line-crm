@@ -179,6 +179,12 @@ function updateCustomerInfo(memberId, customerName, customerCode, birthday) {
   ).run(customerName || null, customerCode || null, birthday || null, memberId);
 }
 
+function updateMemberBirthday(memberId, birthday) {
+  return db.prepare(
+    'UPDATE members SET birthday = ? WHERE id = ?'
+  ).run(birthday || null, memberId);
+}
+
 function hasReorderReminder(memberId, reminderType, lastPurchaseDate) {
   const row = db.prepare(
     'SELECT id FROM reorder_reminders WHERE member_id = ? AND reminder_type = ? AND last_purchase_date = ?'
@@ -235,4 +241,5 @@ module.exports = {
   getFirstPurchase,
   getMembersWithoutCustomerInfo,
   updateCustomerInfo,
+  updateMemberBirthday,
 };

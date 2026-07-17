@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { getCustomerById, getCustomerPoint, getPurchaseHistory, getTransactionDetails } = require('../smaregi/api');
+const { getCustomerById, getCustomerPoint, getPurchaseHistory, getTransactionDetails, updateCustomer } = require('../smaregi/api');
 
 /**
  * GET /api/liff/member?lineUserId=xxx
@@ -78,6 +78,50 @@ router.get('/history', async (req, res) => {
   } catch (err) {
     console.error('[LIFF /history Error]', err.message);
     res.status(500).json({ error: 'smaregi_error' });
+  }
+});
+
+/**
+ * POST /api/liff/profile
+ * 顧客が誕生日を自己入力 → スマレジ＆ローカルDBに反映
+ * body: { lineUserId, birthYear, birthMonth, birthDay }
+ */
+router.post('/profile', async (req, res) => {
+  const { lineUserId, birthYear, birthMonth, birthDay } = req.body || {};
+
+  if (!lineUserId) return res.status(400).json({ error: 'lineUserId is required' });
+
+  const member = db.findMemberByLineId(lineUserId);
+  if (!member || !member.smaregi_customer_id) {
+    return res.status(404).json({ error: 'not_linked' });
+  }
+
+  const month = parseInt(birthMonth, 10);
+  const day = parseInt(birthDay, 10);
+
+  if (!birthMonth) {
+    return res.status(400).json({ error: '月を選択してください' });
+  }
+  if (month < 1 || month > 12) {
+    return res.status(400).json({ error: '月は1〜12で入力してください' });
+  }
+  if (birthDay && (day < 1 || day > 31)) {
+    return res.status(400).json({ error: '日は1〜31で入力してください' });
+  }
+
+  const yyyy = birthYear ? String(parseInt(birthYear, 10)).padStart(4, '0') : '0000';
+  const mm = String(month).padStart(2, '0');
+  const dd = birthDay ? String(day).padStart(2, '0') : '00';
+  const birthDate = `${yyyy}-${mm}-${dd}`;
+
+  try {
+    await updateCustomer(member.smaregi_customer_id, { birthDate });
+    db.updateMemberBirthday(member.id, birthDate);
+    console.log(`[LIFF /profile] 誕生日更新: member_id=${member.id} → ${birthDate}`);
+    res.json({ success: true, birthDate });
+  } catch (err) {
+    console.error('[LIFF /profile Error]', err.response?.data || err.message);
+    res.status(500).json({ error: 'update_failed', detail: err.response?.data });
   }
 });
 

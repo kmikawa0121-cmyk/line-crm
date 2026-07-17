@@ -16,7 +16,7 @@ async function getAccessToken() {
 
   const params = new URLSearchParams();
   params.append('grant_type', 'client_credentials');
-  params.append('scope', 'pos.customers:read pos.transactions:read');
+  params.append('scope', 'pos.customers:read pos.customers:write pos.transactions:read');
 
   const response = await axios.post(tokenUrl, params, {
     auth: {
@@ -176,4 +176,21 @@ async function getTransactionDetails(transactionHeadId) {
   return Array.isArray(response.data) ? response.data : [];
 }
 
-module.exports = { findCustomerByMemberCode, getCustomerById, getCustomerPoint, getPurchaseHistory, getTransactionById, getTransactionDetails };
+/**
+ * スマレジ顧客情報を更新
+ * @param {string} customerId
+ * @param {object} data  例: { birthDate: '1990-07-15' }
+ */
+async function updateCustomer(customerId, data) {
+  const token = await getAccessToken();
+  const { SMAREGI_CONTRACT_ID } = process.env;
+
+  const response = await axios.patch(
+    `https://api.smaregi.jp/${SMAREGI_CONTRACT_ID}/pos/customers/${customerId}`,
+    data,
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+  return response.data;
+}
+
+module.exports = { findCustomerByMemberCode, getCustomerById, getCustomerPoint, getPurchaseHistory, getTransactionById, getTransactionDetails, updateCustomer };
