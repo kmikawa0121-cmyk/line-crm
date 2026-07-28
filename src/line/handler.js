@@ -7,43 +7,50 @@ const {
   getLinkFailMessage,
 } = require('./messages');
 
-let client;
+// チャネルIDごとのLINEクライアントを管理
+const clients = {};
 
 function initLineClient() {
-  client = new line.messagingApi.MessagingApiClient({
-    channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
-  });
-  return client;
+  const { getChannels } = require('../channels');
+  const channels = getChannels();
+  for (const [id, ch] of Object.entries(channels)) {
+    clients[id] = new line.messagingApi.MessagingApiClient({
+      channelAccessToken: ch.accessToken,
+    });
+  }
+  console.log(`[LINE] クライアント初期化: ${Object.keys(clients).join(', ')}`);
 }
 
-function getClient() {
-  if (!client) initLineClient();
-  return client;
+function getClient(channelId = 'ch1') {
+  if (Object.keys(clients).length === 0) initLineClient();
+  return clients[channelId] || clients[Object.keys(clients)[0]];
 }
 
 /**
  * LINEのWebhookイベントを処理する
+ * req.channelId にチャネルIDがセットされている前提
  */
 async function handleLineWebhook(req, res) {
+  const channelId = req.channelId || 'ch1';
   const events = req.body.events || [];
 
   // LINEは200が返らないと再送するため、即座に返してから処理する
   res.sendStatus(200);
 
-  Promise.all(events.map(handleEvent)).catch(err => {
+  Promise.all(events.map(e => handleEvent(e, channelId))).catch(err => {
     console.error('[LINE Webhook] 処理エラー:', err);
   });
 }
 
-async function handleEvent(event) {
+async function handleEvent(event, channelId = 'ch1') {
   const lineUserId = event.source.userId;
   const replyToken = event.replyToken;
 
   try {
     if (event.type === 'follow') {
       // 友だち追加 → 会員番号の入力を促す
-      await ensureMember(lineUserId);
-      await getClient().replyMessage({
+      await ensureMember(lineUserId, channelId);
+      await getClient(channelId).replyMessage({
         replyToken,
         messages: [getWelcomeMessage()],
       });
@@ -55,10 +62,9 @@ async function handleEvent(event) {
       const member = db.findMemberByLineId(lineUserId);
 
       // 未連携 かつ 数字のみのメッセージ → 会員番号として処理
-      // 相談など文字を含むメッセージはスタッフが手動対応できるよう無視する
       if (!member || !member.smaregi_customer_id) {
         if (/^\d+$/.test(text)) {
-          await handleMemberCodeInput(lineUserId, text, replyToken);
+          await handleMemberCodeInput(lineUserId, text, replyToken, channelId);
         }
         return;
       }
@@ -73,14 +79,14 @@ async function handleEvent(event) {
 /**
  * 会員番号入力の処理
  */
-async function handleMemberCodeInput(lineUserId, memberCode, replyToken) {
+async function handleMemberCodeInput(lineUserId, memberCode, replyToken, channelId = 'ch1') {
   let customer;
 
   try {
     customer = await findCustomerByMemberCode(memberCode);
   } catch (err) {
     console.error('[Smaregi API Error]', err.message);
-    await getClient().replyMessage({
+    await getClient(channelId).replyMessage({
       replyToken,
       messages: [{ type: 'text', text: 'エラーが発生しました。しばらくしてからお試しください。' }],
     });
@@ -88,7 +94,7 @@ async function handleMemberCodeInput(lineUserId, memberCode, replyToken) {
   }
 
   if (!customer) {
-    await getClient().replyMessage({
+    await getClient(channelId).replyMessage({
       replyToken,
       messages: [getLinkFailMessage()],
     });
@@ -96,14 +102,14 @@ async function handleMemberCodeInput(lineUserId, memberCode, replyToken) {
   }
 
   // 会員情報を取得してLINEと紐付け
-  const profile = await getClient().getProfile(lineUserId);
-  db.createMember(lineUserId, profile.displayName);
+  const profile = await getClient(channelId).getProfile(lineUserId);
+  db.createMember(lineUserId, profile.displayName, channelId);
   const customerName = [customer.lastName, customer.firstName].filter(Boolean).join(' ');
   db.linkMember(lineUserId, String(customer.customerId), String(customer.customerCode || ''), customerName);
 
-  console.log(`[LINE] 紐付け完了: LINE=${lineUserId} ← スマレジ顧客ID=${customer.customerId} 会員番号=${customer.customerCode} 氏名=${customerName}`);
+  console.log(`[LINE] 紐付け完了: LINE=${lineUserId} ← スマレジ顧客ID=${customer.customerId} 会員番号=${customer.customerCode} 氏名=${customerName} チャネル=${channelId}`);
 
-  await getClient().replyMessage({
+  await getClient(channelId).replyMessage({
     replyToken,
     messages: [getLinkSuccessMessage(profile.displayName)],
   });
@@ -111,10 +117,10 @@ async function handleMemberCodeInput(lineUserId, memberCode, replyToken) {
 }
 
 // 429時に最大3回リトライ（2秒→4秒→6秒待機）
-async function pushMessageWithRetry(to, messages, maxRetries = 3) {
+async function pushMessageWithRetry(channelId, to, messages, maxRetries = 3) {
   for (let i = 0; i < maxRetries; i++) {
     try {
-      await getClient().pushMessage({ to, messages });
+      await getClient(channelId).pushMessage({ to, messages });
       console.log(`[LINE] pushMessage成功: ${to}`);
       return;
     } catch (err) {
@@ -134,9 +140,9 @@ async function pushMessageWithRetry(to, messages, maxRetries = 3) {
 /**
  * 友だち追加時にDBにレコードを作る（未連携状態で保持）
  */
-async function ensureMember(lineUserId) {
-  const profile = await getClient().getProfile(lineUserId);
-  db.createMember(lineUserId, profile.displayName);
+async function ensureMember(lineUserId, channelId = 'ch1') {
+  const profile = await getClient(channelId).getProfile(lineUserId);
+  db.createMember(lineUserId, profile.displayName, channelId);
 }
 
-module.exports = { handleLineWebhook, initLineClient, getClient };
+module.exports = { handleLineWebhook, initLineClient, getClient, pushMessageWithRetry };

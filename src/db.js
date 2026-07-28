@@ -21,7 +21,8 @@ db.exec(`
     smaregi_customer_id TEXT UNIQUE,
     customer_code TEXT,
     display_name TEXT,
-    registered_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    registered_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    channel_id TEXT NOT NULL DEFAULT 'ch1'
   );
 
   CREATE TABLE IF NOT EXISTS purchases (
@@ -84,10 +85,10 @@ function findMemberBySmaregiId(smaregiCustomerId) {
   return db.prepare('SELECT * FROM members WHERE smaregi_customer_id = ?').get(smaregiCustomerId);
 }
 
-function createMember(lineUserId, displayName) {
+function createMember(lineUserId, displayName, channelId = 'ch1') {
   return db.prepare(
-    'INSERT OR IGNORE INTO members (line_user_id, display_name) VALUES (?, ?)'
-  ).run(lineUserId, displayName);
+    'INSERT OR IGNORE INTO members (line_user_id, display_name, channel_id) VALUES (?, ?, ?)'
+  ).run(lineUserId, displayName, channelId);
 }
 
 function linkMember(lineUserId, smaregiCustomerId, customerCode, customerName) {
@@ -97,7 +98,7 @@ function linkMember(lineUserId, smaregiCustomerId, customerCode, customerName) {
 }
 
 // 既存DBへの列追加（マイグレーション）
-for (const col of ['customer_code TEXT', 'customer_name TEXT', 'birthday TEXT']) {
+for (const col of ["customer_code TEXT", "customer_name TEXT", "birthday TEXT", "channel_id TEXT NOT NULL DEFAULT 'ch1'"]) {
   try { db.exec(`ALTER TABLE members ADD COLUMN ${col}`); } catch (_) {}
 }
 
@@ -124,7 +125,7 @@ function scheduleMessage(memberId, purchaseId, messageType, scheduledAt) {
 
 function getPendingMessages() {
   return db.prepare(`
-    SELECT sm.*, m.line_user_id, p.product_codes, p.purchased_at
+    SELECT sm.*, m.line_user_id, m.channel_id, p.product_codes, p.purchased_at
     FROM scheduled_messages sm
     JOIN members m ON sm.member_id = m.id
     JOIN purchases p ON sm.purchase_id = p.id
@@ -161,7 +162,12 @@ function saveBirthdayMessage(memberId, year) {
   ).run(memberId, year);
 }
 
-function getAllLinkedMembers() {
+function getAllLinkedMembers(channelId = null) {
+  if (channelId) {
+    return db.prepare(
+      'SELECT * FROM members WHERE smaregi_customer_id IS NOT NULL AND channel_id = ?'
+    ).all(channelId);
+  }
   return db.prepare(
     'SELECT * FROM members WHERE smaregi_customer_id IS NOT NULL'
   ).all();

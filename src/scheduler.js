@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const db = require('./db');
-const { getClient } = require('./line/handler');
+const { getClient, pushMessageWithRetry } = require('./line/handler');
 const { getFollowUpMessage, getReorderReminderMessage, getLongAbsenceMessage, getBirthdayMessages } = require('./line/messages');
 const { getPurchaseHistory, getCustomerById, getTransactionDetails } = require('./smaregi/api');
 const { sendDmReminder } = require('./email');
@@ -33,15 +33,16 @@ function startScheduler() {
         const message = getFollowUpMessage(msg.message_type, null);
 
         // LINE表示名を取得してパーソナライズ
+        const chId = msg.channel_id || 'ch1';
         let displayName = null;
         try {
-          const profile = await getClient().getProfile(msg.line_user_id);
+          const profile = await getClient(chId).getProfile(msg.line_user_id);
           displayName = profile.displayName;
         } catch (_) {}
 
         const personalizedMessage = getFollowUpMessage(msg.message_type, displayName);
 
-        await getClient().pushMessage({
+        await getClient(chId).pushMessage({
           to: msg.line_user_id,
           messages: [personalizedMessage],
         });
@@ -88,14 +89,15 @@ function startScheduler() {
             if (db.hasReorderReminder(member.id, type, lastDate)) continue;
 
             // LINEの表示名を取得
+            const chId = member.channel_id || 'ch1';
             let displayName = member.display_name;
             try {
-              const profile = await getClient().getProfile(member.line_user_id);
+              const profile = await getClient(chId).getProfile(member.line_user_id);
               displayName = profile.displayName;
             } catch (_) {}
 
             // リマインド送信
-            await getClient().pushMessage({
+            await getClient(chId).pushMessage({
               to: member.line_user_id,
               messages: [getReorderReminderMessage(type, displayName)],
             });
@@ -140,13 +142,14 @@ function startScheduler() {
           if (daysSince >= days && daysSince < days + 3) {
             if (db.hasReorderReminder(member.id, type, lastDate)) continue;
 
+            const chIdA = member.channel_id || 'ch1';
             let displayName = member.display_name;
             try {
-              const profile = await getClient().getProfile(member.line_user_id);
+              const profile = await getClient(chIdA).getProfile(member.line_user_id);
               displayName = profile.displayName;
             } catch (_) {}
 
-            await getClient().pushMessage({
+            await getClient(chIdA).pushMessage({
               to: member.line_user_id,
               messages: [getLongAbsenceMessage(type, displayName)],
             });
@@ -184,13 +187,14 @@ function startScheduler() {
         if (birthMonth !== thisMonth) continue;
         if (db.hasBirthdayMessage(member.id, thisYear)) continue;
 
+        const chIdB = member.channel_id || 'ch1';
         let displayName = member.display_name;
         try {
-          const profile = await getClient().getProfile(member.line_user_id);
+          const profile = await getClient(chIdB).getProfile(member.line_user_id);
           displayName = profile.displayName;
         } catch (_) {}
 
-        await getClient().pushMessage({
+        await getClient(chIdB).pushMessage({
           to: member.line_user_id,
           messages: getBirthdayMessages(displayName),
         });

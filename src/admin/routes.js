@@ -38,9 +38,17 @@ router.get('/', requireAuth, (req, res) => {
   });
 });
 
-// 会員一覧API
+// チャネル一覧API
+router.get('/api/channels', requireAuth, (req, res) => {
+  const { getChannels } = require('../channels');
+  const channels = getChannels();
+  res.json(Object.values(channels).map(ch => ({ id: ch.id, name: ch.name })));
+});
+
+// 会員一覧API（channel クエリパラメータでフィルタ可能）
 router.get('/api/members', requireAuth, (req, res) => {
-  const members = db.getAllLinkedMembers();
+  const { channel } = req.query;
+  const members = db.getAllLinkedMembers(channel || null);
   res.json(members);
 });
 
@@ -98,17 +106,17 @@ router.get('/api/instagram/latest', requireAuth, async (req, res) => {
 
 // LINE一斉配信
 router.post('/api/broadcast', requireAuth, express.json(), async (req, res) => {
-  const { messages } = req.body;
+  const { messages, channelId = 'ch1' } = req.body;
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messagesが必要です' });
   }
 
-  const members = db.getAllLinkedMembers();
+  const members = db.getAllLinkedMembers(channelId);
   const userIds = members.map((m) => m.line_user_id).filter(Boolean);
 
   if (userIds.length === 0) return res.json({ sent: 0 });
 
-  const client = getClient();
+  const client = getClient(channelId);
   let sent = 0;
 
   // multicastは500件ずつ
