@@ -1,10 +1,14 @@
 const line = require('@line/bot-sdk');
 const db = require('../db');
 const { findCustomerByMemberCode } = require('../smaregi/api');
+const { findMemberByEmail: findMakeShopMemberByEmail } = require('../makeshop/api');
 const {
   getWelcomeMessage,
   getLinkSuccessMessage,
   getLinkFailMessage,
+  getCh2WelcomeMessage,
+  getCh2LinkSuccessMessage,
+  getCh2LinkFailMessage,
 } = require('./messages');
 
 // チャネルIDごとのLINEクライアントを管理
@@ -48,12 +52,9 @@ async function handleEvent(event, channelId = 'ch1') {
 
   try {
     if (event.type === 'follow') {
-      // 友だち追加 → 会員番号の入力を促す
       await ensureMember(lineUserId, channelId);
-      await getClient(channelId).replyMessage({
-        replyToken,
-        messages: [getWelcomeMessage()],
-      });
+      const welcomeMsg = channelId === 'ch2' ? getCh2WelcomeMessage() : getWelcomeMessage();
+      await getClient(channelId).replyMessage({ replyToken, messages: [welcomeMsg] });
       return;
     }
 
@@ -61,7 +62,17 @@ async function handleEvent(event, channelId = 'ch1') {
       const text = event.message.text.trim();
       const member = db.findMemberByLineId(lineUserId);
 
-      // 未連携 かつ 数字のみのメッセージ → 会員番号として処理
+      if (channelId === 'ch2') {
+        // ch2: メールアドレスで連携
+        if (!member || !member.makeshop_member_id) {
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
+            await handleEmailInput(lineUserId, text, replyToken, channelId);
+          }
+        }
+        return;
+      }
+
+      // ch1: 数字のみ → 会員番号として処理
       if (!member || !member.smaregi_customer_id) {
         if (/^\d+$/.test(text)) {
           await handleMemberCodeInput(lineUserId, text, replyToken, channelId);
@@ -74,6 +85,36 @@ async function handleEvent(event, channelId = 'ch1') {
   } catch (err) {
     console.error('[LINE Handler Error]', err.message);
   }
+}
+
+/**
+ * ch2: メールアドレス入力の処理
+ */
+async function handleEmailInput(lineUserId, email, replyToken, channelId = 'ch2') {
+  let makeshopMember;
+  try {
+    makeshopMember = await findMakeShopMemberByEmail(email);
+  } catch (err) {
+    console.error('[MakeShop API Error]', err.message);
+    await getClient(channelId).replyMessage({
+      replyToken,
+      messages: [{ type: 'text', text: 'エラーが発生しました。しばらくしてからお試しください。' }],
+    });
+    return;
+  }
+
+  if (!makeshopMember) {
+    await getClient(channelId).replyMessage({ replyToken, messages: [getCh2LinkFailMessage()] });
+    return;
+  }
+
+  const profile = await getClient(channelId).getProfile(lineUserId);
+  db.createMember(lineUserId, profile.displayName, channelId);
+  db.linkMakeShopMember(lineUserId, makeshopMember.memberId, makeshopMember.name);
+
+  console.log(`[LINE] ch2連携完了: LINE=${lineUserId} ← MakeShop=${makeshopMember.memberId} 氏名=${makeshopMember.name}`);
+
+  await getClient(channelId).replyMessage({ replyToken, messages: [getCh2LinkSuccessMessage(profile.displayName)] });
 }
 
 /**

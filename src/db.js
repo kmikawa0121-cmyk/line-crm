@@ -97,8 +97,18 @@ function linkMember(lineUserId, smaregiCustomerId, customerCode, customerName) {
   ).run(smaregiCustomerId, customerCode || null, customerName || null, lineUserId);
 }
 
+function linkMakeShopMember(lineUserId, makeshopMemberId, makeshopMemberName) {
+  return db.prepare(
+    'UPDATE members SET makeshop_member_id = ?, makeshop_member_name = ? WHERE line_user_id = ?'
+  ).run(makeshopMemberId, makeshopMemberName || null, lineUserId);
+}
+
+function findMemberByMakeShopId(makeshopMemberId) {
+  return db.prepare('SELECT * FROM members WHERE makeshop_member_id = ?').get(makeshopMemberId);
+}
+
 // 既存DBへの列追加（マイグレーション）
-for (const col of ["customer_code TEXT", "customer_name TEXT", "birthday TEXT", "channel_id TEXT NOT NULL DEFAULT 'ch1'"]) {
+for (const col of ["customer_code TEXT", "customer_name TEXT", "birthday TEXT", "channel_id TEXT NOT NULL DEFAULT 'ch1'", "makeshop_member_id TEXT", "makeshop_member_name TEXT"]) {
   try { db.exec(`ALTER TABLE members ADD COLUMN ${col}`); } catch (_) {}
 }
 
@@ -231,6 +241,8 @@ module.exports = {
   findMemberBySmaregiId,
   createMember,
   linkMember,
+  linkMakeShopMember,
+  findMemberByMakeShopId,
   savePurchase,
   getPurchaseCount,
   scheduleMessage,

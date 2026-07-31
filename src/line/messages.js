@@ -232,8 +232,32 @@ function getBirthdayMessages(displayName) {
   return [textMessage, couponMessage];
 }
 
+function getCh2WelcomeMessage() {
+  return {
+    type: 'text',
+    text: '美川漢方堂のLINEへようこそ🌿\n\nご登録いただきありがとうございます。\n\nご注文後のフォローアップや、お体に寄り添うメッセージをお届けします。\n\n通販サイトにご登録のメールアドレスをご入力ください👇',
+  };
+}
+
+function getCh2LinkSuccessMessage(displayName) {
+  return {
+    type: 'text',
+    text: `${displayName || 'お客様'}様、連携が完了しました✅\n\nこれから、ご注文に合わせたフォローアップメッセージをお届けします。\n\n漢方や健康食品は、毎日続けることで本来の力を発揮します🌿\n\nお体のことで気になることがあれば、いつでもご相談ください。`,
+  };
+}
+
+function getCh2LinkFailMessage() {
+  return {
+    type: 'text',
+    text: 'メールアドレスが見つかりませんでした。\n\n通販サイト（ササヘルス通販）にご登録のメールアドレスをご確認の上、再度入力してください。\n\nご不明な点はお問い合わせください。',
+  };
+}
+
 module.exports = {
   getFollowUpMessage,
+  getCh2WelcomeMessage,
+  getCh2LinkSuccessMessage,
+  getCh2LinkFailMessage,
   getReorderReminderMessage,
   getLongAbsenceMessage,
   getBirthdayMessages,
