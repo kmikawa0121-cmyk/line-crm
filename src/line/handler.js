@@ -1,14 +1,11 @@
 const line = require('@line/bot-sdk');
 const db = require('../db');
 const { findCustomerByMemberCode } = require('../smaregi/api');
-const { findMemberByEmail: findMakeShopMemberByEmail } = require('../makeshop/api');
 const {
   getWelcomeMessage,
   getLinkSuccessMessage,
   getLinkFailMessage,
   getCh2WelcomeMessage,
-  getCh2LinkSuccessMessage,
-  getCh2LinkFailMessage,
 } = require('./messages');
 
 // チャネルIDごとのLINEクライアントを管理
@@ -63,12 +60,7 @@ async function handleEvent(event, channelId = 'ch1') {
       const member = db.findMemberByLineId(lineUserId);
 
       if (channelId === 'ch2') {
-        // ch2: メールアドレスで連携
-        if (!member || !member.makeshop_member_id) {
-          if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
-            await handleEmailInput(lineUserId, text, replyToken, channelId);
-          }
-        }
+        // ch2: 総合受信箱側で処理するため何もしない
         return;
       }
 
@@ -85,36 +77,6 @@ async function handleEvent(event, channelId = 'ch1') {
   } catch (err) {
     console.error('[LINE Handler Error]', err.message);
   }
-}
-
-/**
- * ch2: メールアドレス入力の処理
- */
-async function handleEmailInput(lineUserId, email, replyToken, channelId = 'ch2') {
-  let makeshopMember;
-  try {
-    makeshopMember = await findMakeShopMemberByEmail(email);
-  } catch (err) {
-    console.error('[MakeShop API Error]', err.message);
-    await getClient(channelId).replyMessage({
-      replyToken,
-      messages: [{ type: 'text', text: 'エラーが発生しました。しばらくしてからお試しください。' }],
-    });
-    return;
-  }
-
-  if (!makeshopMember) {
-    await getClient(channelId).replyMessage({ replyToken, messages: [getCh2LinkFailMessage()] });
-    return;
-  }
-
-  const profile = await getClient(channelId).getProfile(lineUserId);
-  db.createMember(lineUserId, profile.displayName, channelId);
-  db.linkMakeShopMember(lineUserId, makeshopMember.memberId, makeshopMember.name);
-
-  console.log(`[LINE] ch2連携完了: LINE=${lineUserId} ← MakeShop=${makeshopMember.memberId} 氏名=${makeshopMember.name}`);
-
-  await getClient(channelId).replyMessage({ replyToken, messages: [getCh2LinkSuccessMessage(profile.displayName)] });
 }
 
 /**
