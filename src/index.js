@@ -19,11 +19,66 @@ const PORT = process.env.PORT || 3000;
 // --- チャネル別 LINE Webhook 登録 ---
 const channels = getChannels();
 
+/**
+ * 生のボディを受け取り、ch1 だけ総合受信箱にも転送する。
+ *
+ * 店舗用LINE（ch1）は委託会員カードが稼働しているため、LINE側の Webhook URL を
+ * 総合受信箱に切り替えることができない。そこで、ここで受け取ったものを
+ * そのまま横流しする。
+ *
+ * **生のバイト列のまま送ること。**JSON に直して送り直すと署名が合わず、
+ * 受け取り側で弾かれる。
+ *
+ * **@line/bot-sdk の middleware より前に置くこと。**
+ * middleware は本文を ①req.rawBody → ②req.body → ③ストリームを読む の順で探す。
+ * express.raw() が req.body に Buffer を入れるので、それを req.rawBody に移してから
+ * middleware に渡す。検証後に middleware が req.body をパース済みオブジェクトに
+ * 置き換えるので、既存の handleLineWebhook はそのまま動く。
+ *
+ * **app.use() や express.json() での先読みは使わない。**
+ * ストリームを先に消費すると ③ が空を読み、全チャネルの署名検証が落ちる。
+ * ルート単位で閉じておけば、置き場所を間違えようがない。
+ *
+ * 転送は投げっぱなし。**受信箱が落ちていても会員カードの処理は止めない。**
+ */
+// 転送先。既定値を持たせてあるので、Railway の環境変数を設定しなくても動く。
+// （Railway を操作できる人が限られているため、設定作業を増やさない）
+//
+// 上書きしたいときは CH1_FORWARD_URL に別のURLを、
+// 止めたいときは CH1_FORWARD_URL=off を入れる。
+//
+// このURLは署名（HMAC-SHA256）で守られている。Channel secret を持たない相手が
+// 叩いても、受け取り側で401になる。
+const CH1_FORWARD_DEFAULT = 'https://inbox.mikawakampodo.com/webhook/line/bdd1ae6efe559510c92765e9';
+const ch1ForwardUrl = String(process.env.CH1_FORWARD_URL ?? CH1_FORWARD_DEFAULT).trim();
+const ch1ForwardOn = Boolean(ch1ForwardUrl) && ch1ForwardUrl.toLowerCase() !== 'off';
+
+const rawAndForward = (channelId) => [
+  express.raw({ type: '*/*', limit: '2mb' }),
+  (req, res, next) => {
+    req.rawBody = req.body;
+
+    if (channelId === 'ch1' && ch1ForwardOn) {
+      fetch(ch1ForwardUrl, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-line-signature': req.get('x-line-signature') || '',
+        },
+        body: req.rawBody,
+      }).catch((err) => {
+        console.error('[Forward] 転送に失敗:', err.message);
+      });
+    }
+    next();
+  },
+];
+
 for (const [channelId, ch] of Object.entries(channels)) {
   const middleware = line.middleware({ channelSecret: ch.secret });
 
   // チャネル専用エンドポイント: /webhook/line/ch1, /webhook/line/ch2 ...
-  app.post(`/webhook/line/${channelId}`, middleware, (req, res, next) => {
+  app.post(`/webhook/line/${channelId}`, ...rawAndForward(channelId), middleware, (req, res, next) => {
     req.channelId = channelId;
     next();
   }, handleLineWebhook);
@@ -35,11 +90,17 @@ for (const [channelId, ch] of Object.entries(channels)) {
 const ch1 = channels['ch1'];
 if (ch1) {
   const ch1Middleware = line.middleware({ channelSecret: ch1.secret });
-  app.post('/webhook/line', ch1Middleware, (req, res, next) => {
+  app.post('/webhook/line', ...rawAndForward('ch1'), ch1Middleware, (req, res, next) => {
     req.channelId = 'ch1';
     next();
   }, handleLineWebhook);
 }
+
+console.log(
+  ch1ForwardOn
+    ? `[Forward] ch1 → ${ch1ForwardUrl}`
+    : '[Forward] ch1 の転送は無効（CH1_FORWARD_URL=off）'
+);
 
 // --- その他ルーティング ---
 
