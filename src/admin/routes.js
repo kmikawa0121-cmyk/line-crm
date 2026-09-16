@@ -104,14 +104,54 @@ router.get('/api/instagram/latest', requireAuth, async (req, res) => {
   }
 });
 
+// フィルタ適用ヘルパー
+function applyFilters(members, filters = {}) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  let result = [...members];
+
+  if (filters.birthdayRequired) {
+    result = result.filter(m => m.birthday);
+  }
+  if (filters.birthMonth) {
+    const month = parseInt(filters.birthMonth, 10);
+    result = result.filter(m => m.birthday && parseInt(m.birthday.slice(5, 7), 10) === month);
+  }
+  if (filters.ageGroup) {
+    result = result.filter(m => {
+      if (!m.birthday) return false;
+      const age = currentYear - parseInt(m.birthday.slice(0, 4), 10);
+      if (filters.ageGroup === '40s') return age >= 40 && age < 50;
+      if (filters.ageGroup === '50s') return age >= 50 && age < 60;
+      if (filters.ageGroup === '60s') return age >= 60 && age < 70;
+      if (filters.ageGroup === '70plus') return age >= 70;
+      return true;
+    });
+  }
+  if (filters.registeredWithin) {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - parseInt(filters.registeredWithin, 10));
+    result = result.filter(m => m.registered_at && new Date(m.registered_at) >= cutoff);
+  }
+  return result;
+}
+
+// フィルタ適用後の送信予定人数を返す
+router.post('/api/broadcast/preview', requireAuth, express.json(), (req, res) => {
+  const { channelId = 'ch1', filters = {} } = req.body;
+  const members = applyFilters(db.getAllLinkedMembers(channelId || null), filters);
+  res.json({ count: members.length });
+});
+
 // LINE一斉配信
 router.post('/api/broadcast', requireAuth, express.json(), async (req, res) => {
-  const { messages, channelId = 'ch1' } = req.body;
+  const { messages, channelId = 'ch1', filters = {} } = req.body;
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messagesが必要です' });
   }
 
-  const members = db.getAllLinkedMembers(channelId);
+  const allMembers = db.getAllLinkedMembers(channelId || null);
+  const members = applyFilters(allMembers, filters);
   const userIds = members.map((m) => m.line_user_id).filter(Boolean);
 
   if (userIds.length === 0) return res.json({ sent: 0 });
