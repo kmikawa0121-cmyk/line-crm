@@ -344,8 +344,10 @@
         const code = m.customer_code || `<span class="badge">未取得</span>`;
         let birthdayStr = `<span class="badge">未登録</span>`;
         if (m.birthday) {
-          const month = parseInt(m.birthday.slice(-5, -3), 10);
-          birthdayStr = `${month}月`;
+          const year = m.birthday.slice(0, 4);
+          const month = parseInt(m.birthday.slice(5, 7), 10);
+          const day = parseInt(m.birthday.slice(8, 10), 10);
+          birthdayStr = `${year}年${month}月${day}日`;
         }
         return `
           <tr>
