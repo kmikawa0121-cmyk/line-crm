@@ -74,9 +74,9 @@ router.post('/api/members/sync', requireAuth, async (req, res) => {
 // CSVダウンロード
 router.get('/api/members/csv', requireAuth, (req, res) => {
   const members = db.getAllLinkedMembers();
-  const header = '会員名,LINE表示名,会員番号,スマレジ顧客ID,連携日時\n';
+  const header = '会員名,LINE表示名,会員番号,スマレジ顧客ID,誕生日,連携日時\n';
   const rows = members.map(m =>
-    `"${m.customer_name || ''}","${m.display_name || ''}","${m.customer_code || ''}","${m.smaregi_customer_id || ''}","${m.registered_at || ''}"`
+    `"${m.customer_name || ''}","${m.display_name || ''}","${m.customer_code || ''}","${m.smaregi_customer_id || ''}","${m.birthday || ''}","${m.registered_at || ''}"`
   ).join('\n');
 
   res.set('Content-Type', 'text/csv; charset=utf-8');
