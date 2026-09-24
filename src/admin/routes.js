@@ -129,7 +129,9 @@ function applyFilters(members, filters = {}) {
         if (g === '40s') return age >= 40 && age < 50;
         if (g === '50s') return age >= 50 && age < 60;
         if (g === '60s') return age >= 60 && age < 70;
-        if (g === '70plus') return age >= 70;
+        if (g === '70s') return age >= 70 && age < 80;
+        if (g === '80s') return age >= 80 && age < 90;
+        if (g === '90plus') return age >= 90;
         return false;
       });
     });
