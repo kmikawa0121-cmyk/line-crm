@@ -124,6 +124,8 @@ function applyFilters(members, filters = {}) {
       if (!m.birthday) return false;
       const age = currentYear - parseInt(m.birthday.slice(0, 4), 10);
       return filters.ageGroups.some(g => {
+        if (g === '20s') return age >= 20 && age < 30;
+        if (g === '30s') return age >= 30 && age < 40;
         if (g === '40s') return age >= 40 && age < 50;
         if (g === '50s') return age >= 50 && age < 60;
         if (g === '60s') return age >= 60 && age < 70;
