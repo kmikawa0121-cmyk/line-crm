@@ -113,19 +113,23 @@ function applyFilters(members, filters = {}) {
   if (filters.birthdayRequired) {
     result = result.filter(m => m.birthday);
   }
-  if (filters.birthMonth) {
-    const month = parseInt(filters.birthMonth, 10);
-    result = result.filter(m => m.birthday && parseInt(m.birthday.slice(5, 7), 10) === month);
+  // birthMonths: number[] (複数選択対応)
+  if (filters.birthMonths && filters.birthMonths.length > 0) {
+    const months = filters.birthMonths.map(Number);
+    result = result.filter(m => m.birthday && months.includes(parseInt(m.birthday.slice(5, 7), 10)));
   }
-  if (filters.ageGroup) {
+  // ageGroups: string[] (複数選択対応)
+  if (filters.ageGroups && filters.ageGroups.length > 0) {
     result = result.filter(m => {
       if (!m.birthday) return false;
       const age = currentYear - parseInt(m.birthday.slice(0, 4), 10);
-      if (filters.ageGroup === '40s') return age >= 40 && age < 50;
-      if (filters.ageGroup === '50s') return age >= 50 && age < 60;
-      if (filters.ageGroup === '60s') return age >= 60 && age < 70;
-      if (filters.ageGroup === '70plus') return age >= 70;
-      return true;
+      return filters.ageGroups.some(g => {
+        if (g === '40s') return age >= 40 && age < 50;
+        if (g === '50s') return age >= 50 && age < 60;
+        if (g === '60s') return age >= 60 && age < 70;
+        if (g === '70plus') return age >= 70;
+        return false;
+      });
     });
   }
   if (filters.registeredWithin) {

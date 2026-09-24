@@ -186,19 +186,18 @@
     padding: 16px 24px;
     border-top: 1px solid #f0ebe4;
     background: #faf7f3;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
-  .filter-group label {
+  .filter-group > .filter-label {
     font-size: 11px;
     color: #999;
     letter-spacing: 1px;
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 7px;
   }
   .filter-group select {
-    width: 100%;
     padding: 7px 10px;
     border: 1px solid #e8e0d6;
     border-radius: 6px;
@@ -206,17 +205,30 @@
     font-size: 13px;
     color: #2c2c2c;
     font-family: 'Noto Sans JP', sans-serif;
+    min-width: 180px;
   }
   .filter-group select:focus { outline: none; border-color: #c8960c; }
-  .filter-checkbox {
+  .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+  .checkbox-group label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-top: 20px;
+    gap: 5px;
     font-size: 13px;
     color: #2c2c2c;
+    cursor: pointer;
+    white-space: nowrap;
   }
-  .filter-checkbox input[type=checkbox] { width: 16px; height: 16px; accent-color: #c8960c; }
+  .checkbox-group input[type=checkbox] { width: 15px; height: 15px; accent-color: #c8960c; cursor: pointer; }
+  .filter-row {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
 
   .broadcast-form {
     padding: 16px 24px 24px;
@@ -310,46 +322,57 @@
     <div id="igEmpty" style="padding:16px 24px; font-size:12px; color:#aaa; display:none;">投稿が取得できませんでした</div>
 
     <div class="broadcast-filters">
-      <div class="filter-group">
-        <label>チャネル</label>
-        <select id="filterChannel" onchange="updatePreview()">
-          <option value="ch1">美川漢方堂 店舗用</option>
-          <option value="ch2">ササヘルス通販</option>
-        </select>
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-label">チャネル</span>
+          <select id="filterChannel" onchange="updatePreview()">
+            <option value="ch1">美川漢方堂 店舗用</option>
+            <option value="ch2">ササヘルス通販</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">連携期間</span>
+          <select id="filterRegistered" onchange="updatePreview()">
+            <option value="">全期間</option>
+            <option value="3">3ヶ月以内</option>
+            <option value="6">6ヶ月以内</option>
+            <option value="12">1年以内</option>
+            <option value="24">2年以内</option>
+          </select>
+        </div>
       </div>
+
       <div class="filter-group">
-        <label>誕生月</label>
-        <select id="filterBirthMonth" onchange="updatePreview()">
-          <option value="">全員</option>
-          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
-          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
-          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
-          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-        </select>
+        <span class="filter-label">誕生月（複数選択可）</span>
+        <div class="checkbox-group">
+          <label><input type="checkbox" value="1"  onchange="updatePreview()">1月</label>
+          <label><input type="checkbox" value="2"  onchange="updatePreview()">2月</label>
+          <label><input type="checkbox" value="3"  onchange="updatePreview()">3月</label>
+          <label><input type="checkbox" value="4"  onchange="updatePreview()">4月</label>
+          <label><input type="checkbox" value="5"  onchange="updatePreview()">5月</label>
+          <label><input type="checkbox" value="6"  onchange="updatePreview()">6月</label>
+          <label><input type="checkbox" value="7"  onchange="updatePreview()">7月</label>
+          <label><input type="checkbox" value="8"  onchange="updatePreview()">8月</label>
+          <label><input type="checkbox" value="9"  onchange="updatePreview()">9月</label>
+          <label><input type="checkbox" value="10" onchange="updatePreview()">10月</label>
+          <label><input type="checkbox" value="11" onchange="updatePreview()">11月</label>
+          <label><input type="checkbox" value="12" onchange="updatePreview()">12月</label>
+        </div>
       </div>
-      <div class="filter-group">
-        <label>年代</label>
-        <select id="filterAgeGroup" onchange="updatePreview()">
-          <option value="">全年代</option>
-          <option value="40s">40代</option>
-          <option value="50s">50代</option>
-          <option value="60s">60代</option>
-          <option value="70plus">70代以上</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>連携期間</label>
-        <select id="filterRegistered" onchange="updatePreview()">
-          <option value="">全期間</option>
-          <option value="3">3ヶ月以内</option>
-          <option value="6">6ヶ月以内</option>
-          <option value="12">1年以内</option>
-          <option value="24">2年以内</option>
-        </select>
-      </div>
-      <div class="filter-checkbox">
-        <input type="checkbox" id="filterBirthdayRequired" onchange="updatePreview()">
-        <label style="font-size:13px; color:#2c2c2c; letter-spacing:0; margin:0;">誕生日登録済みの人のみ</label>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-label">年代（複数選択可）</span>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="40s"    onchange="updatePreview()">40代</label>
+            <label><input type="checkbox" value="50s"    onchange="updatePreview()">50代</label>
+            <label><input type="checkbox" value="60s"    onchange="updatePreview()">60代</label>
+            <label><input type="checkbox" value="70plus" onchange="updatePreview()">70代以上</label>
+          </div>
+        </div>
+        <div class="filter-group" style="padding-top:18px;">
+          <label class="checkbox-group"><input type="checkbox" id="filterBirthdayRequired" onchange="updatePreview()">誕生日登録済みの人のみ</label>
+        </div>
       </div>
     </div>
 
@@ -469,11 +492,17 @@
   let selectedPost = null;
 
   function getFilters() {
+    const birthMonths = [...document.querySelectorAll('.checkbox-group input[type=checkbox][value]')]
+      .filter(el => !['40s','50s','60s','70plus'].includes(el.value) && el.checked)
+      .map(el => Number(el.value));
+    const ageGroups = [...document.querySelectorAll('.checkbox-group input[type=checkbox]')]
+      .filter(el => ['40s','50s','60s','70plus'].includes(el.value) && el.checked)
+      .map(el => el.value);
     return {
       channelId: document.getElementById('filterChannel').value,
       filters: {
-        birthMonth: document.getElementById('filterBirthMonth').value || undefined,
-        ageGroup: document.getElementById('filterAgeGroup').value || undefined,
+        birthMonths: birthMonths.length > 0 ? birthMonths : undefined,
+        ageGroups: ageGroups.length > 0 ? ageGroups : undefined,
         registeredWithin: document.getElementById('filterRegistered').value || undefined,
         birthdayRequired: document.getElementById('filterBirthdayRequired').checked || undefined,
       }
